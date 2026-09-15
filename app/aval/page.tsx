@@ -13,7 +13,7 @@ interface SolicitudAval {
     programa: string;
     centro: string;
     cuotas: number;
-    estado: 'Pendiente de Revisión' | 'Aprovado' | 'Observado';
+    estado: 'Pendiente de Revisión' | 'Aprobado' | 'Observado';
     solicitante: string;
     fechaSolicitud: string;
     observaciones?: string;
@@ -40,7 +40,7 @@ export default function AvalPage() {
             programa: 'Técnico en Programación Móvil',
             centro: 'CSF - Servicios Financieros',
             cuotas: 18,
-            estado: 'Aprovado',
+            estado: 'Aprobado',
             solicitante: 'Valeria Carrillo G. (Líder Planeación)',
             fechaSolicitud: HOY,
         },
@@ -61,7 +61,7 @@ export default function AvalPage() {
                 s.id === revision.id
                     ? {
                           ...s,
-                          estado: revision.decisionType === 'aprobar' ? 'Aprovado' : 'Observado',
+                          estado: revision.decisionType === 'aprobar' ? 'Aprobado' : 'Observado',
                           observaciones,
                       }
                     : s
@@ -124,7 +124,7 @@ export default function AvalPage() {
                 <div className="flex flex-col items-center gap-1">
                     <Badge
                         variant={
-                            item.estado === 'Aprovado'
+                            item.estado === 'Aprobado'
                                 ? 'success'
                                 : item.estado === 'Observado'
                                 ? 'danger'
@@ -157,17 +157,17 @@ export default function AvalPage() {
                                 onClick={() => handleAbrirRevision(item.id, 'devolver')}
                                 className="border border-amber-400 text-amber-700 hover:bg-amber-50 text-xs font-bold px-3 py-1.5 rounded-full transition"
                             >
-                                Devolver
+                                Devolver Matriz
                             </button>
                             <button
                                 type="button"
                                 onClick={() => handleAbrirRevision(item.id, 'aprobar')}
                                 className="bg-[#39A900] hover:bg-[#329600] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-xs transition"
                             >
-                                Aprovar Matriz
+                                Aprobar Matriz
                             </button>
                         </>
-                    ) : item.estado === 'Aprovado' ? (
+                    ) : item.estado === 'Aprobado' ? (
                         <span className="text-xs text-emerald-700 font-bold flex items-center gap-1">
                             <svg className="w-3.5 h-3.5 text-[#39A900]" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />

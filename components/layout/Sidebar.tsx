@@ -28,9 +28,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
     const pathname = usePathname();
     const router = useRouter();
-    const [parametrizacionExpanded, setParametrizacionExpanded] = useState(
-        pathname.startsWith('/parametrizacion')
-    );
+    const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({
+        'Parametrización': pathname.startsWith('/parametrizacion'),
+        'Matriz de Priorización': pathname.startsWith('/matriz'),
+    });
 
     const isLinkActive = (href?: string) => {
         if (!href) return false;
@@ -41,7 +42,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     const navItems: NavItem[] = [
         {
             name: 'Panel de Control',
-            href: '/',
+            href: '/dashboard',
             icon: (
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
@@ -81,7 +82,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         },
         {
             name: 'Matriz de Priorización',
-            href: '/matriz',
+            children: [
+                { name: 'Gestión de Matrices', href: '/matriz' },
+                { name: 'Criterios de Matriz', href: '/matriz/criterios' },
+            ],
             icon: (
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
@@ -157,7 +161,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             <div>
                 <div className="mb-6 pb-4 border-b border-slate-200">
                     <Link
-                        href="/"
+                        href="/dashboard"
                         className="flex items-center gap-3 group focus:outline-none focus:ring-2 focus:ring-[#39A900] rounded-xl p-1"
                         onClick={onCloseMobile}
                     >
@@ -168,10 +172,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {/* Lista de Navegación */}
                 <nav className="space-y-1.5 text-sm" aria-label="Navegación principal">
                     {navItems.map((item) => {
-                        // Caso con submenú (ej. Parametrización)
+                        // Caso con submenú (ej. Parametrización, Matriz de Priorización)
                         if (item.children) {
-                            const isChildActive = pathname.startsWith('/parametrizacion');
-                            const isOpen = parametrizacionExpanded || isChildActive;
+                            const children = item.children;
+                            const isChildActive = children.some((child) => pathname === child.href);
+                            const isOpen = expandedMenus[item.name] || isChildActive;
 
                             return (
                                 <div key={item.name} className="space-y-1">
@@ -179,10 +184,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                         type="button"
                                         onClick={() => {
                                             if (!isOpen) {
-                                                setParametrizacionExpanded(true);
-                                                router.push('/parametrizacion/programas');
+                                                setExpandedMenus((prev) => ({ ...prev, [item.name]: true }));
+                                                router.push(children[0].href);
                                             } else {
-                                                setParametrizacionExpanded(!parametrizacionExpanded);
+                                                setExpandedMenus((prev) => ({ ...prev, [item.name]: !prev[item.name] }));
                                             }
                                         }}
                                         className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left transition-colors ${
@@ -209,8 +214,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                                     {isOpen && (
                                         <div className="pl-6 pr-1 py-1 space-y-1 border-l-2 border-slate-300 ml-4 animate-fade-in">
-                                            {item.children.map((child) => {
-                                                const active = isLinkActive(child.href);
+                                            {children.map((child) => {
+                                                const active = pathname === child.href;
                                                 return (
                                                     <Link
                                                         key={child.name}
@@ -264,6 +269,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     type="button"
                     onClick={() => {
                         // [BACKEND INTEGRATION]: POST /api/v1/auth/logout
+                        if (typeof window !== 'undefined') {
+                            window.localStorage.removeItem('sena-matriz-active-role');
+                        }
                         router.push('/');
                     }}
                     className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-red-600 hover:bg-red-50 transition focus:outline-none focus:ring-2 focus:ring-red-400"
@@ -276,7 +284,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
                         />
                     </svg>
-                    Cerrar Sesión Institucional
+                    Cerrar Sesión
                 </button>
             </div>
         </div>

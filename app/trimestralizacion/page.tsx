@@ -127,7 +127,7 @@ export default function TrimestralizacionPage() {
                     onClick={() => alert('Sincronizando cuotas con el sistema institucional...')}
                     className="bg-[#39A900] hover:bg-[#329600] text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-xs transition"
                 >
-                    + Ajustar Distribución de Cuotas
+                    Ajustar Distribución de Cuotas
                 </button>
             </div>
 
