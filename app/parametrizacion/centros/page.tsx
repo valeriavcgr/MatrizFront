@@ -327,7 +327,7 @@ export default function ParametrizacionCentrosPage() {
     const columns: TableColumn<CentroFormacion>[] = [
         {
             key: 'codigo',
-            header: 'Sigla / Código',
+            header: 'Sigla',
             align: 'center',
             headerClassName: 'w-32',
             render: (item) => (

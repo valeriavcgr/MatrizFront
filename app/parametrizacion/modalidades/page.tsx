@@ -305,7 +305,7 @@ export default function ParametrizacionModalidadesPage() {
         },
         {
             key: 'plataforma',
-            header: 'Entorno / Plataforma',
+            header: 'Plataforma',
             headerClassName: 'w-48',
             render: (item) => (
                 <span className="text-xs font-medium text-slate-700">{item.plataforma}</span>

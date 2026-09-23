@@ -235,7 +235,7 @@ export default function ParametrizacionProgramasPage() {
         },
         {
             key: 'centro',
-            header: 'Centro Formación',
+            header: 'Linea Modular',
             headerClassName: 'w-44',
             render: (item) => (
                 <span className="text-xs text-slate-600 truncate block">{item.centro}</span>
