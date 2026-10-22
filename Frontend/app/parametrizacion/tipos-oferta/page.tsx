@@ -1,163 +1,113 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { TipoOferta, TableColumn } from '@/types';
 import { AppShell } from '@/components/layout/AppShell';
 import { DataTable } from '@/components/ui/DataTable';
 import { Badge } from '@/components/ui/Badge';
 import { Modal } from '@/components/ui/Modal';
+import { api, ErrorApi } from '@/lib/api';
+
+const RUTA = '/parametrizacion/tipos-oferta';
+const NOMBRE_MIN = 3;
+const NOMBRE_MAX = 50;
 
 interface TipoOfertaFormProps {
     onClose: () => void;
-    onSave: (data: Omit<TipoOferta, 'id'>) => void;
+    onSaved: (tipo: TipoOferta, esNuevo: boolean) => void;
     tipoAEditar?: TipoOferta | null;
 }
 
-const TipoOfertaForm: React.FC<TipoOfertaFormProps> = ({
-    onClose,
-    onSave,
-    tipoAEditar,
-}) => {
-    const [codigo, setCodigo] = useState(tipoAEditar ? tipoAEditar.codigo : '');
+/**
+ * Formulario de registro / edición. Solo se diligencia el nombre:
+ * el código lo asigna el sistema y el estado se cambia desde la tabla.
+ */
+const TipoOfertaForm: React.FC<TipoOfertaFormProps> = ({ onClose, onSaved, tipoAEditar }) => {
     const [nombre, setNombre] = useState(tipoAEditar ? tipoAEditar.nombre : '');
-    const [publicoObjetivo, setPublicoObjetivo] = useState(tipoAEditar ? tipoAEditar.publicoObjetivo : 'Ciudadanía en General');
-    const [requiereConvenio, setRequiereConvenio] = useState<boolean>(tipoAEditar?.requiereConvenio || false);
-    const [descripcion, setDescripcion] = useState(tipoAEditar ? tipoAEditar.descripcion : '');
-    const [estado, setEstado] = useState<'Activo' | 'Inactivo'>(tipoAEditar?.estado || 'Activo');
-    const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
+    const [touched, setTouched] = useState(false);
+    const [guardando, setGuardando] = useState(false);
+    const [errorServidor, setErrorServidor] = useState<string | null>(null);
 
-    const errores = {
-        codigo: !codigo.trim() ? 'El código es obligatorio.' : '',
-        nombre: nombre.trim().length < 4 ? 'El nombre debe tener al menos 4 caracteres.' : '',
-        descripcion: descripcion.trim().length < 10 ? 'La descripción debe tener al menos 10 caracteres.' : '',
-    };
+    const nombreLimpio = nombre.trim().replace(/\s+/g, ' ');
+    const errorNombre =
+        nombreLimpio.length < NOMBRE_MIN
+            ? `El nombre debe tener al menos ${NOMBRE_MIN} caracteres.`
+            : nombreLimpio.length > NOMBRE_MAX
+              ? `El nombre debe tener máximo ${NOMBRE_MAX} caracteres.`
+              : '';
 
-    const isValido = !errores.codigo && !errores.nombre && !errores.descripcion;
-
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setTouched({ codigo: true, nombre: true, descripcion: true });
+        setTouched(true);
+        if (errorNombre) return;
 
-        if (!isValido) return;
-
-        // [BACKEND INTEGRATION]: POST /api/v1/parametrizacion/tipos-oferta
-        onSave({
-            codigo: codigo.trim().toUpperCase(),
-            nombre: nombre.trim(),
-            publicoObjetivo,
-            requiereConvenio,
-            descripcion: descripcion.trim(),
-            estado,
-        });
-
-        onClose();
+        setGuardando(true);
+        setErrorServidor(null);
+        try {
+            const tipo = tipoAEditar
+                ? await api<TipoOferta>(`${RUTA}/${tipoAEditar.codigo}`, {
+                      method: 'PATCH',
+                      body: { nombre: nombreLimpio },
+                  })
+                : await api<TipoOferta>(RUTA, { method: 'POST', body: { nombre: nombreLimpio } });
+            onSaved(tipo, !tipoAEditar);
+            onClose();
+        } catch (error) {
+            setErrorServidor(error instanceof ErrorApi ? error.message : 'No fue posible guardar el tipo de oferta');
+        } finally {
+            setGuardando(false);
+        }
     };
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                        Código <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                        type="text"
-                        placeholder="Ej: OFE-ABI"
-                        value={codigo}
-                        onChange={(e) => {
-                            setCodigo(e.target.value);
-                            setTouched((prev) => ({ ...prev, codigo: true }));
-                        }}
-                        className={`w-full px-3.5 py-2.5 rounded-xl border text-sm bg-white transition focus:outline-none focus:ring-2 focus:ring-[#39A900] ${
-                            touched.codigo && errores.codigo ? 'border-red-400 bg-red-50/20' : 'border-slate-300'
-                        }`}
-                        required
-                    />
-                </div>
+            {errorServidor && (
+                <div className="p-3 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm">{errorServidor}</div>
+            )}
 
+            {tipoAEditar && (
                 <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                        Público Objetivo
+                        Código
                     </label>
-                    <select
-                        value={publicoObjetivo}
-                        onChange={(e) => setPublicoObjetivo(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white transition focus:outline-none focus:ring-2 focus:ring-[#39A900]"
-                    >
-                        <option value="Ciudadanía en General">Ciudadanía en General</option>
-                        <option value="Empresas y Gremios">Empresas y Gremios</option>
-                        <option value="Entidades Públicas / Territoriales">Entidades Públicas / Territoriales</option>
-                        <option value="Comunidades Étnicas y Campesinas">Comunidades Étnicas y Campesinas</option>
-                        <option value="Población Víctima del Conflicto">Población Víctima del Conflicto</option>
-                    </select>
+                    <div className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-100 text-sm font-mono text-slate-600">
+                        {tipoAEditar.codigo}
+                    </div>
                 </div>
-            </div>
+            )}
 
             <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                <label
+                    htmlFor="nombre-tipo-oferta"
+                    className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5"
+                >
                     Nombre del Tipo de Oferta <span className="text-red-500">*</span>
                 </label>
                 <input
+                    id="nombre-tipo-oferta"
                     type="text"
-                    placeholder="Ej: Oferta Abierta / Regular"
+                    placeholder="Ej: Oferta Abierta"
                     value={nombre}
+                    maxLength={NOMBRE_MAX + 10}
                     onChange={(e) => {
                         setNombre(e.target.value);
-                        setTouched((prev) => ({ ...prev, nombre: true }));
+                        setTouched(true);
                     }}
                     className={`w-full px-3.5 py-2.5 rounded-xl border text-sm bg-white transition focus:outline-none focus:ring-2 focus:ring-[#39A900] ${
-                        touched.nombre && errores.nombre ? 'border-red-400 bg-red-50/20' : 'border-slate-300'
+                        touched && errorNombre ? 'border-red-400 bg-red-50/20' : 'border-slate-300'
                     }`}
+                    autoFocus
                     required
                 />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                    <input
-                        type="checkbox"
-                        id="check-convenio"
-                        checked={requiereConvenio}
-                        onChange={(e) => setRequiereConvenio(e.target.checked)}
-                        className="w-4 h-4 text-[#39A900] rounded-sm focus:ring-[#39A900]"
-                    />
-                    <label htmlFor="check-convenio" className="text-xs font-semibold text-slate-700 cursor-pointer">
-                        ¿Requiere Convenio Legal Vinculante?
-                    </label>
+                <div className="flex justify-between mt-1 text-[11px]">
+                    <span className="text-red-500">{touched ? errorNombre : ''}</span>
+                    <span className="text-slate-400">
+                        {nombreLimpio.length}/{NOMBRE_MAX}
+                    </span>
                 </div>
-
-                <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                        Estado
-                    </label>
-                    <select
-                        value={estado}
-                        onChange={(e) => setEstado(e.target.value as 'Activo' | 'Inactivo')}
-                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white transition focus:outline-none focus:ring-2 focus:ring-[#39A900]"
-                    >
-                        <option value="Activo">Activo</option>
-                        <option value="Inactivo">Inactivo</option>
-                    </select>
-                </div>
-            </div>
-
-            <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
-                    Descripción y Lineamientos <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                    rows={3}
-                    placeholder="Especificaciones de asignación de cupos, requisitos de postulación..."
-                    value={descripcion}
-                    onChange={(e) => {
-                        setDescripcion(e.target.value);
-                        setTouched((prev) => ({ ...prev, descripcion: true }));
-                    }}
-                    className={`w-full px-3.5 py-2.5 rounded-xl border text-sm bg-white transition resize-none focus:outline-none focus:ring-2 focus:ring-[#39A900] ${
-                        touched.descripcion && errores.descripcion ? 'border-red-400 bg-red-50/20' : 'border-slate-300'
-                    }`}
-                    required
-                />
+                {!tipoAEditar && (
+                    <p className="text-[11px] text-slate-500 mt-1">El código se asigna automáticamente al registrar.</p>
+                )}
             </div>
 
             <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-200">
@@ -170,103 +120,85 @@ const TipoOfertaForm: React.FC<TipoOfertaFormProps> = ({
                 </button>
                 <button
                     type="submit"
-                    disabled={!isValido}
+                    disabled={!!errorNombre || guardando}
                     className="px-6 py-2.5 rounded-full bg-[#39A900] hover:bg-[#329600] text-white text-sm font-semibold shadow-sm transition disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#39A900]"
                 >
-                    {tipoAEditar ? 'Guardar Cambios' : 'Registrar Tipo de Oferta'}
+                    {guardando ? 'Guardando...' : tipoAEditar ? 'Guardar Cambios' : 'Registrar Tipo de Oferta'}
                 </button>
             </div>
         </form>
     );
 };
 
+type FiltroEstado = 'todos' | 'activos' | 'inactivos';
+
 export default function ParametrizacionTiposOfertaPage() {
+    const [tipos, setTipos] = useState<TipoOferta[]>([]);
+    const [cargando, setCargando] = useState(true);
+    const [errorCarga, setErrorCarga] = useState<string | null>(null);
     const [busqueda, setBusqueda] = useState('');
+    const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>('todos');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [tipoAEditar, setTipoAEditar] = useState<TipoOferta | null>(null);
-    const [notificacion, setNotificacion] = useState<string | null>(null);
+    const [notificacion, setNotificacion] = useState<{ texto: string; error?: boolean } | null>(null);
 
-    // [BACKEND INTEGRATION]: GET /api/v1/parametrizacion/tipos-oferta
-    const [tipos, setTipos] = useState<TipoOferta[]>([
-        {
-            id: 'ofe-01',
-            codigo: 'OFE-ABI',
-            nombre: 'Oferta Abierta (Regular)',
-            descripcion: 'Convocatoria pública nacional dirigida a cualquier ciudadano colombiano o residente que cumpla los requisitos.',
-            publicoObjetivo: 'Ciudadanía en General',
-            requiereConvenio: false,
-            estado: 'Activo',
-        },
-        {
-            id: 'ofe-02',
-            codigo: 'OFE-EMP',
-            nombre: 'Oferta Especial Empresarial',
-            descripcion: 'Formación a la medida coordinada con empresas para responder a demandas específicas de productividad y talento humano.',
-            publicoObjetivo: 'Empresas y Gremios',
-            requiereConvenio: true,
-            estado: 'Activo',
-        },
-        {
-            id: 'ofe-03',
-            codigo: 'OFE-CON',
-            nombre: 'Oferta por Convenio Interinstitucional',
-            descripcion: 'Programas respaldados por convenios formales con alcaldías, gobernaciones, ministerios o fundaciones.',
-            publicoObjetivo: 'Entidades Públicas / Territoriales',
-            requiereConvenio: true,
-            estado: 'Activo',
-        },
-        {
-            id: 'ofe-04',
-            codigo: 'OFE-POP',
-            nombre: 'Oferta Economía Popular y Campesina',
-            descripcion: 'Estrategias diferenciales dirigidas a asociaciones comunitarias, trabajadores informales y unidades productivas del campo.',
-            publicoObjetivo: 'Comunidades Étnicas y Campesinas',
-            requiereConvenio: false,
-            estado: 'Activo',
-        },
-    ]);
-
-    const tiposFiltrados = useMemo(() => {
-        return tipos.filter(
-            (t) =>
-                t.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
-                t.codigo.toLowerCase().includes(busqueda.toLowerCase()) ||
-                t.publicoObjetivo.toLowerCase().includes(busqueda.toLowerCase()) ||
-                t.descripcion.toLowerCase().includes(busqueda.toLowerCase())
-        );
-    }, [tipos, busqueda]);
-
-    const triggerNotificacion = (msg: string) => {
-        setNotificacion(msg);
+    const triggerNotificacion = (texto: string, error = false) => {
+        setNotificacion({ texto, error });
         setTimeout(() => setNotificacion(null), 4000);
     };
 
-    const handleGuardar = (data: Omit<TipoOferta, 'id'>) => {
-        if (tipoAEditar) {
-            setTipos(tipos.map((t) => (t.id === tipoAEditar.id ? { ...data, id: t.id } : t)));
-            triggerNotificacion(`Tipo de oferta ${data.codigo} actualizado.`);
-        } else {
-            const nuevo: TipoOferta = {
-                ...data,
-                id: `ofe-0${tipos.length + 1}`,
-            };
-            setTipos([nuevo, ...tipos]);
-            triggerNotificacion(`Tipo de oferta ${data.codigo} registrado.`);
+    const cargarTipos = useCallback(async () => {
+        setCargando(true);
+        setErrorCarga(null);
+        try {
+            setTipos(await api<TipoOferta[]>(RUTA));
+        } catch (error) {
+            setErrorCarga(error instanceof ErrorApi ? error.message : 'No fue posible cargar los tipos de oferta');
+        } finally {
+            setCargando(false);
         }
-        setTipoAEditar(null);
+    }, []);
+
+    useEffect(() => {
+        // Carga inicial desde el API: actualizar el estado aquí es intencional.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        void cargarTipos();
+    }, [cargarTipos]);
+
+    const tiposFiltrados = useMemo(() => {
+        const texto = busqueda.toLowerCase();
+        return tipos.filter(
+            (t) =>
+                (filtroEstado === 'todos' || t.estado === (filtroEstado === 'activos')) &&
+                (t.nombre.toLowerCase().includes(texto) || String(t.codigo).includes(texto)),
+        );
+    }, [tipos, busqueda, filtroEstado]);
+
+    const handleGuardado = (tipo: TipoOferta, esNuevo: boolean) => {
+        setTipos((actuales) =>
+            esNuevo ? [tipo, ...actuales] : actuales.map((t) => (t.codigo === tipo.codigo ? tipo : t)),
+        );
+        triggerNotificacion(`Tipo de oferta "${tipo.nombre}" ${esNuevo ? 'registrado' : 'actualizado'}.`);
     };
 
-    const handleToggle = (id: string) => {
-        setTipos(
-            tipos.map((t) => {
-                if (t.id === id) {
-                    const nuevoEstado = t.estado === 'Activo' ? 'Inactivo' : 'Activo';
-                    triggerNotificacion(`Oferta ${t.codigo} marcada como: ${nuevoEstado}`);
-                    return { ...t, estado: nuevoEstado };
-                }
-                return t;
-            })
-        );
+    const handleToggle = async (tipo: TipoOferta) => {
+        try {
+            const actualizado = await api<TipoOferta>(`${RUTA}/${tipo.codigo}/estado`, {
+                method: 'PATCH',
+                body: { estado: !tipo.estado },
+            });
+            setTipos((actuales) => actuales.map((t) => (t.codigo === actualizado.codigo ? actualizado : t)));
+            triggerNotificacion(
+                `Tipo de oferta "${actualizado.nombre}" ${actualizado.estado ? 'activado' : 'desactivado'}.`,
+            );
+        } catch (error) {
+            triggerNotificacion(error instanceof ErrorApi ? error.message : 'No fue posible cambiar el estado', true);
+        }
+    };
+
+    const cerrarModal = () => {
+        setIsModalOpen(false);
+        setTipoAEditar(null);
     };
 
     const columns: TableColumn<TipoOferta>[] = [
@@ -284,33 +216,7 @@ export default function ParametrizacionTiposOfertaPage() {
         {
             key: 'nombre',
             header: 'Tipo de Oferta',
-            headerClassName: 'w-48',
-            render: (item) => (
-                <div>
-                    <div className="font-semibold text-slate-900 leading-tight">{item.nombre}</div>
-                    <div className="text-[11px] text-slate-500 mt-0.5">{item.publicoObjetivo}</div>
-                </div>
-            ),
-        },
-        {
-            key: 'requiereConvenio',
-            header: 'Convenio',
-            align: 'center',
-            headerClassName: 'w-32',
-            render: (item) => (
-                <Badge variant={item.requiereConvenio ? 'info' : 'neutral'} size="sm">
-                    {item.requiereConvenio ? 'Requiere Convenio' : 'Convocatoria Libre'}
-                </Badge>
-            ),
-        },
-        {
-            key: 'descripcion',
-            header: 'Lineamientos Institucionales',
-            render: (item) => (
-                <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                    {item.descripcion}
-                </p>
-            ),
+            render: (item) => <div className="font-semibold text-slate-900 leading-tight">{item.nombre}</div>,
         },
         {
             key: 'estado',
@@ -318,8 +224,8 @@ export default function ParametrizacionTiposOfertaPage() {
             align: 'center',
             headerClassName: 'w-28',
             render: (item) => (
-                <Badge variant={item.estado === 'Activo' ? 'success' : 'danger'} size="sm" dot>
-                    {item.estado}
+                <Badge variant={item.estado ? 'success' : 'danger'} size="sm" dot>
+                    {item.estado ? 'Activo' : 'Inactivo'}
                 </Badge>
             ),
         },
@@ -345,11 +251,11 @@ export default function ParametrizacionTiposOfertaPage() {
                     </button>
                     <button
                         type="button"
-                        onClick={() => handleToggle(item.id)}
+                        onClick={() => handleToggle(item)}
                         className={`p-1.5 rounded-lg transition ${
-                            item.estado === 'Activo' ? 'text-amber-600 hover:bg-amber-50' : 'text-[#39A900] hover:bg-green-50'
+                            item.estado ? 'text-amber-600 hover:bg-amber-50' : 'text-[#39A900] hover:bg-green-50'
                         }`}
-                        title={item.estado === 'Activo' ? 'Inactivar' : 'Activar'}
+                        title={item.estado ? 'Desactivar' : 'Activar'}
                     >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
@@ -363,19 +269,29 @@ export default function ParametrizacionTiposOfertaPage() {
     return (
         <AppShell
             title="Parametrización - Tipos de Oferta"
-            subtitle="Reglas de convocatoria institucional, convenios empresariales y programas especiales"
+            subtitle="Registro, consulta, actualización y activación de los tipos de oferta formativa"
             initialRole="ADMINISTRADOR"
         >
             {notificacion && (
-                <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm font-medium flex items-center justify-between shadow-xs animate-fade-in">
-                    <div className="flex items-center gap-2">
-                        <svg className="w-5 h-5 text-emerald-600" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                        </svg>
-                        <span>{notificacion}</span>
-                    </div>
+                <div
+                    className={`p-4 rounded-xl border text-sm font-medium flex items-center justify-between shadow-xs animate-fade-in ${
+                        notificacion.error
+                            ? 'border-red-200 bg-red-50 text-red-800'
+                            : 'border-emerald-200 bg-emerald-50 text-emerald-800'
+                    }`}
+                >
+                    <span>{notificacion.texto}</span>
                     <button type="button" onClick={() => setNotificacion(null)} className="text-xs font-bold hover:underline">
                         Cerrar
+                    </button>
+                </div>
+            )}
+
+            {errorCarga && (
+                <div className="p-4 rounded-xl border border-red-200 bg-red-50 text-red-800 text-sm font-medium flex items-center justify-between">
+                    <span>{errorCarga}</span>
+                    <button type="button" onClick={() => void cargarTipos()} className="text-xs font-bold hover:underline">
+                        Reintentar
                     </button>
                 </div>
             )}
@@ -395,49 +311,59 @@ export default function ParametrizacionTiposOfertaPage() {
                     Nuevo Tipo de Oferta
                 </button>
 
-                <div className="relative w-full md:w-80">
-                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
+                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                    <select
+                        value={filtroEstado}
+                        onChange={(e) => setFiltroEstado(e.target.value as FiltroEstado)}
+                        className="px-4 py-2 rounded-full border border-slate-300 text-sm bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#39A900] transition"
+                        aria-label="Filtrar por estado"
+                    >
+                        <option value="todos">Todos los estados</option>
+                        <option value="activos">Activos</option>
+                        <option value="inactivos">Inactivos</option>
+                    </select>
+                    <div className="relative w-full md:w-72">
+                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Buscar por nombre o código..."
+                            value={busqueda}
+                            onChange={(e) => setBusqueda(e.target.value)}
+                            className="w-full pl-10 pr-4 py-2 rounded-full border border-slate-300 text-sm bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#39A900] transition"
+                        />
                     </div>
-                    <input
-                        type="text"
-                        placeholder="Buscar por tipo de oferta o público..."
-                        value={busqueda}
-                        onChange={(e) => setBusqueda(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 rounded-full border border-slate-300 text-sm bg-slate-50/50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#39A900] transition"
-                    />
                 </div>
             </div>
 
             <DataTable<TipoOferta>
                 data={tiposFiltrados}
                 columns={columns}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => item.codigo}
+                isLoading={cargando}
                 emptyTitle="No se encontraron tipos de oferta"
                 emptyDescription="No hay tipos de oferta que coincidan con la búsqueda."
-                emptyActionLabel="Restablecer Búsqueda"
-                onEmptyAction={() => setBusqueda('')}
+                emptyActionLabel="Restablecer Filtros"
+                onEmptyAction={() => {
+                    setBusqueda('');
+                    setFiltroEstado('todos');
+                }}
             />
 
             <Modal
                 isOpen={isModalOpen}
-                onClose={() => {
-                    setIsModalOpen(false);
-                    setTipoAEditar(null);
-                }}
+                onClose={cerrarModal}
                 title={tipoAEditar ? 'Editar Tipo de Oferta' : 'Nuevo Tipo de Oferta'}
-                subtitle="Configuración de modalidades de convocatoria y público beneficiario"
-                maxWidth="lg"
+                subtitle="Catálogo de tipos de oferta formativa"
+                maxWidth="md"
             >
                 <TipoOfertaForm
-                    key={tipoAEditar ? tipoAEditar.id : 'nuevo'}
-                    onClose={() => {
-                        setIsModalOpen(false);
-                        setTipoAEditar(null);
-                    }}
-                    onSave={handleGuardar}
+                    key={tipoAEditar ? tipoAEditar.codigo : 'nuevo'}
+                    onClose={cerrarModal}
+                    onSaved={handleGuardado}
                     tipoAEditar={tipoAEditar}
                 />
             </Modal>

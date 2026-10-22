@@ -4,8 +4,8 @@
  * se debe agregar aquí su regla de longitud.
  */
 export const REGLAS_DOCUMENTO: Record<string, { min: number; max: number }> = {
-    CC: { min: 7, max: 10 },
-    TI: { min: 7, max: 11 },
+    CC: { min: 7, max: 10 }, // Cédula de ciudadanía
+    CE: { min: 6, max: 10 }, // Cédula de extranjería
 };
 
 export const TIPOS_DOCUMENTO = Object.keys(REGLAS_DOCUMENTO);

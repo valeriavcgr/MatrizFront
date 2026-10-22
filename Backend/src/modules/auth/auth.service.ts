@@ -4,8 +4,10 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
 import bcrypt from 'bcrypt';
-import { PrismaService } from '../../database/prisma.service.js';
+import { Repository } from 'typeorm';
+import { Usuario } from '../../database/entities/index.js';
 import type { UsuarioToken } from '../../common/interfaces/usuario-token.interface.js';
 import { LoginDto } from './dto/login.dto.js';
 
@@ -15,19 +17,18 @@ const CREDENCIALES_INVALIDAS = 'Documento o contraseña incorrectos';
 @Injectable()
 export class AuthService {
     constructor(
-        private readonly prisma: PrismaService,
+        @InjectRepository(Usuario)
+        private readonly usuarios: Repository<Usuario>,
         private readonly jwt: JwtService,
     ) {}
 
     async login(dto: LoginDto) {
-        const usuario = await this.prisma.usuarios.findUnique({
+        const usuario = await this.usuarios.findOne({
             where: {
-                pkfk_tdoc_id_usuarios: {
-                    pkfk_tdoc: dto.tipoDocumento,
-                    id_usuarios: BigInt(dto.numeroDocumento),
-                },
+                pkfk_tdoc: dto.tipoDocumento,
+                id_usuarios: dto.numeroDocumento,
             },
-            include: { roles: true },
+            relations: { roles: true },
         });
 
         // Mismo mensaje si no existe o si la contraseña no coincide,
@@ -46,7 +47,7 @@ export class AuthService {
 
         const payload: UsuarioToken = {
             tipoDocumento: usuario.pkfk_tdoc,
-            numeroDocumento: usuario.id_usuarios.toString(),
+            numeroDocumento: usuario.id_usuarios,
             rol: usuario.roles.rol,
         };
 
@@ -57,14 +58,12 @@ export class AuthService {
     }
 
     async perfil(token: UsuarioToken) {
-        const usuario = await this.prisma.usuarios.findUnique({
+        const usuario = await this.usuarios.findOne({
             where: {
-                pkfk_tdoc_id_usuarios: {
-                    pkfk_tdoc: token.tipoDocumento,
-                    id_usuarios: BigInt(token.numeroDocumento),
-                },
+                pkfk_tdoc: token.tipoDocumento,
+                id_usuarios: token.numeroDocumento,
             },
-            include: { roles: true },
+            relations: { roles: true },
         });
         if (!usuario || !usuario.estado_usu) {
             throw new UnauthorizedException(
@@ -77,7 +76,7 @@ export class AuthService {
     /** Datos del usuario que se envían al front (nunca la contraseña). */
     private aRespuesta(usuario: {
         pkfk_tdoc: string;
-        id_usuarios: bigint;
+        id_usuarios: string;
         nombres_usu: string;
         apellidos_usu: string;
         correo_institucional: string;
@@ -85,7 +84,7 @@ export class AuthService {
     }) {
         return {
             tipoDocumento: usuario.pkfk_tdoc,
-            numeroDocumento: usuario.id_usuarios.toString(),
+            numeroDocumento: usuario.id_usuarios,
             nombres: usuario.nombres_usu,
             apellidos: usuario.apellidos_usu,
             correo: usuario.correo_institucional,

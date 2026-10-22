@@ -145,16 +145,13 @@ export interface JornadaFormacion {
 }
 
 /**
- * Tipo de Oferta de Formación
+ * Tipo de Oferta de Formación (tabla `tipo_oferta`).
+ * El código lo asigna la BD; no se borran, se activan / desactivan.
  */
 export interface TipoOferta {
-    id: string;
-    codigo: string;
+    codigo: number;
     nombre: string;
-    descripcion: string;
-    publicoObjetivo: string;
-    requiereConvenio: boolean;
-    estado: 'Activo' | 'Inactivo';
+    estado: boolean;
 }
 
 /**

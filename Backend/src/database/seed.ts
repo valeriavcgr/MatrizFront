@@ -2,14 +2,10 @@
  * Crea (o actualiza) el usuario ADMINISTRADOR inicial con los datos ADMIN_* del .env.
  * Uso: pnpm db:seed
  */
-import 'dotenv/config';
-import { PrismaPg } from '@prisma/adapter-pg';
 import bcrypt from 'bcrypt';
-import { PrismaClient } from '../src/generated/prisma/client.js';
-import {
-    CONTRASENA,
-    REGLAS_DOCUMENTO,
-} from '../src/common/validators/reglas.js';
+import { CONTRASENA, REGLAS_DOCUMENTO } from '../common/validators/reglas.js';
+import baseDatos from './data-source.js';
+import { Usuario } from './entities/index.js';
 
 const ROL_ADMINISTRADOR = 1;
 
@@ -42,30 +38,20 @@ async function main() {
         );
     }
 
-    const prisma = new PrismaClient({
-        adapter: new PrismaPg({ connectionString: requerida('DATABASE_URL') }),
-    });
+    await baseDatos.initialize();
 
-    const datos = {
+    // save() inserta si el documento no existe y actualiza si ya existe.
+    await baseDatos.getRepository(Usuario).save({
+        pkfk_tdoc: tipo,
+        id_usuarios: numero,
         fk_rol: ROL_ADMINISTRADOR,
         nombres_usu: requerida('ADMIN_NOMBRES'),
         apellidos_usu: requerida('ADMIN_APELLIDOS'),
         correo_institucional: requerida('ADMIN_CORREO'),
         pass_usu: await bcrypt.hash(contrasena, 10),
         estado_usu: true,
-    };
-
-    await prisma.usuarios.upsert({
-        where: {
-            pkfk_tdoc_id_usuarios: {
-                pkfk_tdoc: tipo,
-                id_usuarios: BigInt(numero),
-            },
-        },
-        update: datos,
-        create: { ...datos, pkfk_tdoc: tipo, id_usuarios: BigInt(numero) },
     });
-    await prisma.$disconnect();
+    await baseDatos.destroy();
 
     console.log(`Administrador ${tipo} ${numero} listo`);
 }
