@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { AppShell } from '@/components/layout/AppShell';
 import { Badge } from '@/components/ui/Badge';
 import { DataTable } from '@/components/ui/DataTable';
+import { RevisionModal, DecisionType } from '@/components/aval/RevisionModal';
 import { TableColumn } from '@/types';
 
 interface SolicitudAval {
@@ -11,11 +12,15 @@ interface SolicitudAval {
     matrizCodigo: string;
     programa: string;
     centro: string;
-    ponderacion: number;
-    estado: 'Pendiente de Aval' | 'Aval Aprobado' | 'Observado';
+    cuotas: number;
+    estado: 'Pendiente de Revisión' | 'Aprobado' | 'Observado';
     solicitante: string;
     fechaSolicitud: string;
+    observaciones?: string;
 }
+
+// Fecha real del día, no una fecha de ejemplo fija
+const HOY = new Date().toISOString().slice(0, 10);
 
 export default function AvalPage() {
     const [solicitudes, setSolicitudes] = useState<SolicitudAval[]>([
@@ -24,34 +29,51 @@ export default function AvalPage() {
             matrizCodigo: 'MP-001',
             programa: 'Tecnólogo en Análisis y Desarrollo de Software',
             centro: 'CSF - Servicios Financieros',
-            ponderacion: 100,
-            estado: 'Pendiente de Aval',
+            cuotas: 24,
+            estado: 'Pendiente de Revisión',
             solicitante: 'Valeria Carrillo G. (Líder Planeación)',
-            fechaSolicitud: '2026-02-14',
+            fechaSolicitud: HOY,
         },
         {
             id: 'avl-02',
             matrizCodigo: 'MP-002',
             programa: 'Técnico en Programación Móvil',
             centro: 'CSF - Servicios Financieros',
-            ponderacion: 100,
-            estado: 'Aval Aprobado',
+            cuotas: 18,
+            estado: 'Aprobado',
             solicitante: 'Valeria Carrillo G. (Líder Planeación)',
-            fechaSolicitud: '2026-02-12',
+            fechaSolicitud: HOY,
         },
     ]);
 
-    const handleAprobar = (id: string) => {
+    const [revision, setRevision] = useState<{ id: string; decisionType: DecisionType } | null>(null);
+
+    const handleAbrirRevision = (id: string, decisionType: DecisionType) => {
+        setRevision({ id, decisionType });
+    };
+
+    const handleConfirmarRevision = (observaciones: string) => {
+        if (!revision) return;
+
+        // [BACKEND INTEGRATION]: POST /api/v1/aval/{id}/decision
         setSolicitudes(
-            solicitudes.map((s) => (s.id === id ? { ...s, estado: 'Aval Aprobado' } : s))
+            solicitudes.map((s) =>
+                s.id === revision.id
+                    ? {
+                          ...s,
+                          estado: revision.decisionType === 'aprobar' ? 'Aprobado' : 'Observado',
+                          observaciones,
+                      }
+                    : s
+            )
         );
-        alert('¡Matriz avalada formalmente por la Subdirección del Centro!');
+        setRevision(null);
     };
 
     const columns: TableColumn<SolicitudAval>[] = [
         {
             key: 'matrizCodigo',
-            header: 'Matriz ID',
+            header: 'Código',
             align: 'center',
             headerClassName: 'w-28',
             render: (item) => (
@@ -62,7 +84,7 @@ export default function AvalPage() {
         },
         {
             key: 'programa',
-            header: 'Programa Académico',
+            header: 'Programa',
             render: (item) => (
                 <div>
                     <div className="font-semibold text-slate-900 text-xs leading-tight">{item.programa}</div>
@@ -71,62 +93,98 @@ export default function AvalPage() {
             ),
         },
         {
-            key: 'ponderacion',
-            header: 'Ponderación',
-            align: 'center',
-            headerClassName: 'w-28',
+            key: 'solicitante',
+            header: 'Solicitante',
             render: (item) => (
-                <Badge variant={item.ponderacion === 100 ? 'success' : 'warning'} size="sm">
-                    {item.ponderacion}%
-                </Badge>
+                <span className="text-xs font-medium text-slate-800">{item.solicitante}</span>
             ),
         },
         {
-            key: 'solicitante',
-            header: 'Solicitante y Fecha',
+            key: 'cuotas',
+            header: 'Cuotas',
+            align: 'center',
+            headerClassName: 'w-24',
+            render: (item) => <span className="font-bold text-[#00324D] text-sm">{item.cuotas}</span>,
+        },
+        {
+            key: 'fechaSolicitud',
+            header: 'Fecha Solicitud',
+            align: 'center',
+            headerClassName: 'w-32',
             render: (item) => (
-                <div>
-                    <div className="text-xs font-medium text-slate-800">{item.solicitante}</div>
-                    <div className="text-[11px] text-slate-400 font-mono">{item.fechaSolicitud}</div>
-                </div>
+                <span className="text-[11px] text-slate-500 font-mono">{item.fechaSolicitud}</span>
             ),
         },
         {
             key: 'estado',
             header: 'Estado Aval',
             align: 'center',
-            headerClassName: 'w-36',
+            headerClassName: 'w-40',
             render: (item) => (
-                <Badge
-                    variant={item.estado === 'Aval Aprobado' ? 'success' : 'warning'}
-                    size="sm"
-                    dot
-                >
-                    {item.estado}
-                </Badge>
+                <div className="flex flex-col items-center gap-1">
+                    <Badge
+                        variant={
+                            item.estado === 'Aprobado'
+                                ? 'success'
+                                : item.estado === 'Observado'
+                                ? 'danger'
+                                : 'warning'
+                        }
+                        size="sm"
+                        dot
+                    >
+                        {item.estado}
+                    </Badge>
+                    {item.estado === 'Observado' && item.observaciones && (
+                        <p className="text-[11px] text-slate-500 italic max-w-[160px] text-center leading-tight">
+                            &ldquo;{item.observaciones}&rdquo;
+                        </p>
+                    )}
+                </div>
             ),
         },
         {
             key: 'acciones',
-            header: 'Firma / Decisión',
+            header: 'Acción',
             align: 'right',
-            headerClassName: 'w-32',
+            headerClassName: 'w-44',
             render: (item) => (
-                <div className="flex items-center justify-end">
-                    {item.estado === 'Pendiente de Aval' ? (
-                        <button
-                            type="button"
-                            onClick={() => handleAprobar(item.id)}
-                            className="bg-[#39A900] hover:bg-[#329600] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-xs transition"
-                        >
-                            Otorgar Aval
-                        </button>
-                    ) : (
+                <div className="flex items-center justify-end gap-2">
+                    {item.estado === 'Pendiente de Revisión' ? (
+                        <>
+                            <button
+                                type="button"
+                                onClick={() => handleAbrirRevision(item.id, 'devolver')}
+                                className="border border-amber-400 text-amber-700 hover:bg-amber-50 text-xs font-bold px-3 py-1.5 rounded-full transition"
+                            >
+                                Devolver Matriz
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleAbrirRevision(item.id, 'aprobar')}
+                                className="bg-[#39A900] hover:bg-[#329600] text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-xs transition"
+                            >
+                                Aprobar Matriz
+                            </button>
+                        </>
+                    ) : item.estado === 'Aprobado' ? (
                         <span className="text-xs text-emerald-700 font-bold flex items-center gap-1">
                             <svg className="w-3.5 h-3.5 text-[#39A900]" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                             </svg>
                             Aval Firmado
+                        </span>
+                    ) : (
+                        <span className="text-xs text-amber-700 font-bold flex items-center gap-1">
+                            <svg className="w-3.5 h-3.5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth="2"
+                                    d="M3 10h18M3 6h18M3 14h12M3 18h8"
+                                />
+                            </svg>
+                            Devuelta con Observaciones
                         </span>
                     )}
                 </div>
@@ -137,22 +195,20 @@ export default function AvalPage() {
     return (
         <AppShell
             title="Aval Institucional de Matrices de Formación"
-            subtitle="Módulo de revisión, concepto técnico y firma de aval para la oferta formativa"
+            subtitle="Apruebe o devuelva matrices según los criterios establecidos para otorgar el aval formal de apertura de cupos"
             initialRole="SUBDIRECTOR"
         >
-            <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
-                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
-                    Bandeja de Solicitudes de Aval &bull; Subdirección de Centro
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                    Revise las matrices que alcanzaron el 100% de ponderación de criterios para otorgar el aval formal de apertura de cupos.
-                </p>
-            </div>
-
             <DataTable<SolicitudAval>
                 data={solicitudes}
                 columns={columns}
                 keyExtractor={(item) => item.id}
+            />
+
+            <RevisionModal
+                isOpen={revision !== null}
+                decisionType={revision?.decisionType ?? null}
+                onClose={() => setRevision(null)}
+                onSubmit={handleConfirmarRevision}
             />
         </AppShell>
     );

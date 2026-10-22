@@ -80,7 +80,7 @@ export const Header: React.FC<HeaderProps> = ({
                                     : 'text-slate-600 hover:text-slate-900'
                             }`}
                         >
-                            Planeación
+                            Coordinador
                         </button>
                         <button
                             type="button"

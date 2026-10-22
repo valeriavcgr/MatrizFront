@@ -84,33 +84,12 @@ export const WeightProgressBar: React.FC<WeightProgressBarProps> = ({
 
     return (
         <div className={`flex flex-col gap-2 ${className}`}>
-            {showLabel && (
-                <div className="flex items-center justify-between text-xs font-semibold">
-                    <span className="text-slate-700 flex items-center gap-1.5">
-                        Sumatoria de Ponderación de Criterios:
-                    </span>
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border ${config.bgColor} ${config.borderColor} ${config.textColor}`}>
-                        {config.icon}
-                        <span className="font-bold">{totalWeight}%</span>
-                        <span className="font-normal opacity-90">({config.badgeText})</span>
-                    </span>
-                </div>
-            )}
 
-            {/* Barra de progreso */}
-            <div
-                className="w-full h-3 bg-slate-200 rounded-full overflow-hidden relative shadow-inner"
-                role="progressbar"
-                aria-valuenow={totalWeight}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label="Progreso de ponderación al 100%"
-            >
                 <div
                     className={`h-full ${config.barColor} transition-all duration-500 ease-out rounded-full`}
                     style={{ width: `${clampedProgress}%` }}
                 />
             </div>
-        </div>
+
     );
 };

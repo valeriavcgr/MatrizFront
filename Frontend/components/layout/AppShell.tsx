@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { UserRole } from '@/types';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
@@ -21,10 +21,21 @@ export const AppShell: React.FC<AppShellProps> = ({
     title,
     subtitle,
     children,
-    initialRole = 'LIDER_PLANEACION',
+    initialRole,
 }) => {
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-    const [activeRole, setActiveRole] = useState<UserRole>(initialRole);
+    const [activeRole, setActiveRole] = useState<UserRole>(initialRole ?? 'LIDER_PLANEACION');
+
+    useEffect(() => {
+        if (initialRole) return; // la página fuerza un rol de demostración específico
+        const stored = window.localStorage.getItem('sena-matriz-active-role');
+        if (stored === 'ADMINISTRADOR' || stored === 'LIDER_PLANEACION' || stored === 'SUBDIRECTOR') {
+            // Lectura única de localStorage tras montar (no disponible en el servidor):
+            // debe ir en useEffect para no romper la hidratación.
+            // eslint-disable-next-line react-hooks/set-state-in-effect
+            setActiveRole(stored);
+        }
+    }, [initialRole]);
 
     return (
         <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">

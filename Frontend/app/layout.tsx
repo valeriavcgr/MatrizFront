@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: 'SENA Matriz - Priorización de Oferta Formativa Institucional',
+    title: 'SENA Matriz de Priorización',
     description:
         'Sistema oficial del Servicio Nacional de Aprendizaje SENA para la gestión de matrices de priorización, articulación con variables del Plan de Gobierno, trimestralización y avales.',
     icons: {

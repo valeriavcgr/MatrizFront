@@ -63,8 +63,13 @@ export interface MatrizPriorizacion {
     estado: EstadoMatriz;
     criterios: CriterioPriorizacion[];
     pesoTotal: number;
+    cuotas: number;
+    fechaCreacion: string;
     fechaActualizacion: string;
     responsable: string;
+    modalidad?: string[];
+    jornada?: string[];
+    tipoOferta?: string[];
 }
 
 /**
