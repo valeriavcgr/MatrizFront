@@ -5,18 +5,15 @@ import { UserRole } from '@/types';
 
 interface RoleAvatarProps {
     role: UserRole;
+    /** Nombre completo del usuario de la sesión */
+    nombre: string;
     showDetails?: boolean;
-    customName?: string;
-    customCargo?: string;
     size?: 'sm' | 'md' | 'lg';
     className?: string;
 }
 
 interface RoleConfig {
-    initials: string;
     roleLabel: string;
-    defaultName: string;
-    defaultCargo: string;
     bgClass: string;
     borderClass: string;
     textClass: string;
@@ -27,10 +24,7 @@ interface RoleConfig {
 
 const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
     ADMINISTRADOR: {
-        initials: 'AD',
         roleLabel: 'Administrador',
-        defaultName: 'Carlos Mendoza R.',
-        defaultCargo: 'Administrador del Sistema',
         bgClass: 'bg-[#00324D]',
         borderClass: 'border-[#004b73]',
         textClass: 'text-white',
@@ -39,10 +33,7 @@ const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
         ringColor: 'ring-[#00324D]/30',
     },
     LIDER_PLANEACION: {
-        initials: 'LP',
         roleLabel: 'Líder de Planeación',
-        defaultName: 'Valeria Carrillo G.',
-        defaultCargo: 'Líder de Planeación Regional',
         bgClass: 'bg-[#39A900]',
         borderClass: 'border-[#2e8700]',
         textClass: 'text-white',
@@ -51,10 +42,7 @@ const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
         ringColor: 'ring-[#39A900]/30',
     },
     SUBDIRECTOR: {
-        initials: 'SD',
         roleLabel: 'Subdirector',
-        defaultName: 'Dr. Hernán Torres V.',
-        defaultCargo: 'Subdirector de Centro CSF',
         bgClass: 'bg-[#854D0E]', // Ámbar/Ocre corporativo institucional
         borderClass: 'border-[#713F12]',
         textClass: 'text-white',
@@ -71,13 +59,19 @@ const ROLE_CONFIGS: Record<UserRole, RoleConfig> = {
  */
 export const RoleAvatar: React.FC<RoleAvatarProps> = ({
     role,
+    nombre,
     showDetails = true,
-    customName,
-    customCargo,
     size = 'md',
     className = '',
 }) => {
     const config = ROLE_CONFIGS[role];
+    // Iniciales de las dos primeras palabras del nombre (ej. "Valeria Carrillo" → VC)
+    const iniciales = nombre
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((palabra) => palabra[0].toUpperCase())
+        .join('');
 
     const sizeClasses = {
         sm: {
@@ -109,10 +103,10 @@ export const RoleAvatar: React.FC<RoleAvatarProps> = ({
             {showDetails && (
                 <div className="flex flex-col text-right">
                     <span className={`font-semibold text-slate-800 leading-tight ${sizeClasses.text}`}>
-                        {customName || config.defaultName}
+                        {nombre}
                     </span>
                     <span className={`font-medium ${config.badgeTextClass} leading-tight ${sizeClasses.subtext}`}>
-                        {customCargo || config.roleLabel}
+                        {config.roleLabel}
                     </span>
                 </div>
             )}
@@ -120,9 +114,9 @@ export const RoleAvatar: React.FC<RoleAvatarProps> = ({
             <div className="relative group">
                 <div
                     className={`${sizeClasses.avatar} ${config.bgClass} ${config.textClass} rounded-full flex items-center justify-center font-bold tracking-wider shadow-sm ring-2 ${config.ringColor} transition-transform group-hover:scale-105`}
-                    title={`${config.roleLabel}: ${customName || config.defaultName}`}
+                    title={`${config.roleLabel}: ${nombre}`}
                 >
-                    {config.initials}
+                    {iniciales}
                 </div>
                 {/* Indicador de estado en línea */}
                 <span

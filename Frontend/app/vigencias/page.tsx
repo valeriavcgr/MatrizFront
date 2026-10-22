@@ -107,7 +107,6 @@ export default function VigenciasPage() {
         <AppShell
             title="Gestión de Vigencias Fiscales"
             subtitle="Configuración y seguimiento de periodos anuales de oferta formativa institucional"
-            initialRole="ADMINISTRADOR"
         >
             <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex items-center justify-between">
                 <div>

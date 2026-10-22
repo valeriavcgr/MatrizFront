@@ -1,12 +1,12 @@
 /**
- * Cliente HTTP del backend (NestJS) - Plataforma SENA Matriz
+ * Cliente HTTP del backend (NestJS) con Axios - Plataforma SENA Matriz
  * Agrega el token de sesión y convierte los errores del API en mensajes en español.
  */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000/api/v1';
+import axios, { AxiosError } from 'axios';
+import { cerrarSesion, leerToken } from './sesion';
 
-/** Clave de `sessionStorage` donde la pantalla de login guarda el token. */
-export const CLAVE_TOKEN = 'accessToken';
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:4000';
 
 /**
  * Error devuelto por el API con el mensaje listo para mostrar al usuario
@@ -20,34 +20,47 @@ export class ErrorApi extends Error {
     }
 }
 
-/**
- * Llama al API. Lanza `ErrorApi` si la respuesta no es exitosa.
- */
-export async function api<T>(ruta: string, opciones: { method?: string; body?: unknown } = {}): Promise<T> {
-    const token = typeof window !== 'undefined' ? sessionStorage.getItem(CLAVE_TOKEN) : null;
+/** Instancia de Axios que usan todos los servicios (`services/`). */
+export const http = axios.create({ baseURL: API_URL });
 
-    let respuesta: Response;
-    try {
-        respuesta = await fetch(`${API_URL}${ruta}`, {
-            method: opciones.method ?? 'GET',
-            headers: {
-                ...(opciones.body !== undefined && { 'Content-Type': 'application/json' }),
-                ...(token && { Authorization: `Bearer ${token}` }),
-            },
-            body: opciones.body !== undefined ? JSON.stringify(opciones.body) : undefined,
-        });
-    } catch {
-        throw new ErrorApi('No fue posible conectar con el servidor', 0);
-    }
+http.interceptors.request.use((config) => {
+    const token = leerToken();
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+});
 
-    const datos: unknown = await respuesta.json().catch(() => null);
-    if (!respuesta.ok) {
+http.interceptors.response.use(
+    (respuesta) => respuesta,
+    (error: AxiosError<{ message?: string | string[] }>) => {
+        if (!error.response) {
+            throw new ErrorApi('No fue posible conectar con el servidor', 0);
+        }
+        const { status, data } = error.response;
+
+        // Token vencido o inválido: se cierra la sesión y se vuelve al login.
+        // (En el login todavía no hay token, así que su 401 solo se muestra.)
+        if (status === 401 && leerToken()) {
+            cerrarSesion();
+            window.location.replace('/');
+        }
+
         // El backend responde { message: string | string[] }
-        const mensaje = (datos as { message?: string | string[] } | null)?.message;
+        const mensaje = data?.message;
         throw new ErrorApi(
             Array.isArray(mensaje) ? mensaje.join('. ') : (mensaje ?? 'Ocurrió un error inesperado'),
-            respuesta.status,
+            status,
         );
-    }
-    return datos as T;
+    },
+);
+
+/**
+ * Llama al API y devuelve el cuerpo de la respuesta. Lanza `ErrorApi` si falla.
+ */
+export async function api<T>(ruta: string, opciones: { method?: string; body?: unknown } = {}): Promise<T> {
+    const respuesta = await http.request<T>({
+        url: ruta,
+        method: opciones.method ?? 'GET',
+        data: opciones.body,
+    });
+    return respuesta.data;
 }

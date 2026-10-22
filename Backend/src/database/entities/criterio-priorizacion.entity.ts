@@ -6,7 +6,6 @@ import {
     PrimaryGeneratedColumn,
     type Relation,
 } from 'typeorm';
-import { EN_CASCADA } from './en-cascada.js';
 import { GlosarioEstrategia } from './glosario-estrategia.entity.js';
 
 @Entity('criterio_priorizacion')
@@ -29,7 +28,10 @@ export class CriterioPriorizacion {
     @Column({ type: 'int' })
     fk_glosario_estrategia: number;
 
-    @ManyToOne(() => GlosarioEstrategia, EN_CASCADA)
+    @ManyToOne(() => GlosarioEstrategia, {
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+    })
     @JoinColumn({
         name: 'fk_glosario_estrategia',
         referencedColumnName: 'id_estrategia',

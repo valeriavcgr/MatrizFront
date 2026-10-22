@@ -7,7 +7,6 @@ import {
     type Relation,
 } from 'typeorm';
 import { CentroFormacion } from './centro-formacion.entity.js';
-import { EN_CASCADA } from './en-cascada.js';
 import { MatrizPriorizacion } from './matriz-priorizacion.entity.js';
 import { Oferta } from './oferta.entity.js';
 import { ReferentePlaneacion } from './referente-planeacion.entity.js';
@@ -38,7 +37,10 @@ export class DocumentoTrabajo {
     @Column({ type: 'bigint' })
     fk_referente_id: string;
 
-    @ManyToOne(() => CentroFormacion, EN_CASCADA)
+    @ManyToOne(() => CentroFormacion, {
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+    })
     @JoinColumn({
         name: 'fk_centro_formacion',
         referencedColumnName: 'id_centro_formacion',
@@ -46,7 +48,10 @@ export class DocumentoTrabajo {
     })
     centro_formacion: Relation<CentroFormacion>;
 
-    @ManyToOne(() => MatrizPriorizacion, EN_CASCADA)
+    @ManyToOne(() => MatrizPriorizacion, {
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+    })
     @JoinColumn({
         name: 'fk_matriz_priorizacion',
         referencedColumnName: 'id_matriz_priorizacion',
@@ -54,7 +59,7 @@ export class DocumentoTrabajo {
     })
     matriz_priorizacion: Relation<MatrizPriorizacion>;
 
-    @ManyToOne(() => Oferta, EN_CASCADA)
+    @ManyToOne(() => Oferta, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     @JoinColumn({
         name: 'fk_n_oferta',
         referencedColumnName: 'n_oferta',
@@ -62,7 +67,10 @@ export class DocumentoTrabajo {
     })
     oferta: Relation<Oferta>;
 
-    @ManyToOne(() => ReferentePlaneacion, EN_CASCADA)
+    @ManyToOne(() => ReferentePlaneacion, {
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+    })
     @JoinColumn([
         {
             name: 'fk_referente_tdoc',

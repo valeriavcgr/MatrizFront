@@ -73,7 +73,7 @@ const NuevaMatrizForm: React.FC<NuevaMatrizFormProps> = ({ onClose, onCreated, m
         const hoy = new Date().toISOString().slice(0, 10);
 
         // [BACKEND INTEGRATION]:
-        // Endpoint: POST /api/v1/matrices
+        // Endpoint: POST /matrices
         // Payload: { programaNombre, vigencia, modalidad, jornada, tipoOferta }
         const nuevaMatriz: MatrizPriorizacion = {
             id: `mat-${numero}`,

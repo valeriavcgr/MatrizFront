@@ -85,7 +85,7 @@ const CriteriosForm: React.FC<CriteriosFormProps> = ({
         if (!isFormValido || !variableSeleccionada) return;
 
         // [BACKEND INTEGRATION]:
-        // Endpoint: POST /api/v1/matrices/{matrizId}/criterios
+        // Endpoint: POST /matrices/{matrizId}/criterios
         // Payload: { criterio: variableSeleccionada, peso: numPeso, justificacion, soporte: soporteNombre, valor }
         onSave({
             criterio: variableSeleccionada,

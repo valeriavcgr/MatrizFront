@@ -71,7 +71,7 @@ const ProgramaForm: React.FC<ProgramaFormProps> = ({
         if (!isValido) return;
 
         // [BACKEND INTEGRATION]:
-        // Endpoint: POST /api/v1/parametrizacion/programas
+        // Endpoint: POST /parametrizacion/programas
         // Payload: { codigo, nombre, nivel, duracion, estado, centro }
         onSave({
             codigo: codigo.trim().toUpperCase(),

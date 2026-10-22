@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtModule, JwtModuleOptions } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Usuario } from '../../database/entities/index.js';
+import { Usuario } from '../../../database/entities/index.js';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 

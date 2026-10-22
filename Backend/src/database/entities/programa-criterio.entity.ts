@@ -8,7 +8,6 @@ import {
 } from 'typeorm';
 import { CriterioPriorizacion } from './criterio-priorizacion.entity.js';
 import { DocTrabajoPrograma } from './doc-trabajo-programa.entity.js';
-import { EN_CASCADA } from './en-cascada.js';
 
 /** Argumento y soporte de un criterio para un programa dentro de un documento de trabajo. */
 @Entity('programa_criterio')
@@ -37,7 +36,10 @@ export class ProgramaCriterio {
     @Column({ type: 'bytea' })
     soporte_argumento: Buffer;
 
-    @ManyToOne(() => CriterioPriorizacion, EN_CASCADA)
+    @ManyToOne(() => CriterioPriorizacion, {
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+    })
     @JoinColumn({
         name: 'pkfk_criterio_priorizacion',
         referencedColumnName: 'n_variable',
@@ -46,7 +48,10 @@ export class ProgramaCriterio {
     })
     criterio_priorizacion: Relation<CriterioPriorizacion>;
 
-    @ManyToOne(() => DocTrabajoPrograma, EN_CASCADA)
+    @ManyToOne(() => DocTrabajoPrograma, {
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+    })
     @JoinColumn([
         {
             name: 'pkfk_programa',

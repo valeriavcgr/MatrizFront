@@ -1,128 +1,62 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { SenaLogo } from '@/components/ui/SenaLogo';
-import { UserProfile } from '@/types';
-
-type TipoDocumento =
-    | 'Cédula de ciudadanía'
-    | 'Tarjeta de identidad'
-    | 'Cédula de extranjería'
-    | 'PEP'
-    | 'Permiso de protección temporal';
-
-const TIPOS_DOCUMENTO: TipoDocumento[] = [
-    'Cédula de ciudadanía',
-    'Tarjeta de identidad',
-    'Cédula de extranjería',
-    'PEP',
-    'Permiso de protección temporal',
-];
-
-interface MockCredential {
-    tipoDocumento: TipoDocumento;
-    numeroDocumento: string;
-    password: string;
-    perfil: UserProfile;
-}
-
-const CREDENCIALES_PRUEBA: MockCredential[] = [
-    {
-        tipoDocumento: 'Cédula de ciudadanía',
-        numeroDocumento: '123456789',
-        password: 'Sena2026*',
-        perfil: {
-            id: 'user-admin',
-            nombre: 'Carlos Mendoza R.',
-            cargo: 'Administrador del Sistema',
-            rol: 'ADMINISTRADOR',
-            centro: 'CSF - Centro de Servicios Financieros',
-            regional: 'Regional Distrito Capital',
-            correo: 'admin@sena.edu.co',
-            iniciales: 'AD',
-        },
-    },
-    {
-        tipoDocumento: 'Cédula de ciudadanía',
-        numeroDocumento: '123456789',
-        password: 'Sena2026*',
-        perfil: {
-            id: 'user-planeacion',
-            nombre: 'Valeria Carrillo G.',
-            cargo: 'Líder de Planeación Regional',
-            rol: 'LIDER_PLANEACION',
-            centro: 'CSF - Centro de Servicios Financieros',
-            regional: 'Regional Distrito Capital',
-            correo: 'planeacion@sena.edu.co',
-            iniciales: 'LP',
-        },
-    },
-    {
-        tipoDocumento: 'Cédula de ciudadanía',
-        numeroDocumento: '123456789',
-        password: 'Sena2026*',
-        perfil: {
-            id: 'user-subdirector',
-            nombre: 'Dr. Hernán Torres V.',
-            cargo: 'Subdirector de Centro CSF',
-            rol: 'SUBDIRECTOR',
-            centro: 'CSF - Centro de Servicios Financieros',
-            regional: 'Regional Distrito Capital',
-            correo: 'subdirector@sena.edu.co',
-            iniciales: 'SD',
-        },
-    },
-];
-
-const DOCUMENTO_REGEX = /^\d{9,12}$/;
+import { ErrorApi } from '@/lib/api';
+import { guardarSesion, leerUsuario } from '@/lib/sesion';
+import { iniciarSesion } from '@/services/auth.service';
+import { CodigoTipoDocumento, TIPOS_DOCUMENTO } from '@/types';
 
 export default function LoginPage() {
     const router = useRouter();
-    const [tipoDocumento, setTipoDocumento] = useState<TipoDocumento>(TIPOS_DOCUMENTO[0]);
+    const [tipoDocumento, setTipoDocumento] = useState<CodigoTipoDocumento>(TIPOS_DOCUMENTO[0].codigo);
     const [numeroDocumento, setNumeroDocumento] = useState('');
     const [password, setPassword] = useState('');
     const [touched, setTouched] = useState<{ numeroDocumento?: boolean; password?: boolean }>({});
-    const [submitError, setSubmitError] = useState(false);
+    const [submitError, setSubmitError] = useState('');
+    const [enviando, setEnviando] = useState(false);
+
+    // Si ya hay una sesión abierta, no se vuelve a pedir el login.
+    useEffect(() => {
+        if (leerUsuario()) router.replace('/dashboard');
+    }, [router]);
+
+    const regla = TIPOS_DOCUMENTO.find((t) => t.codigo === tipoDocumento) ?? TIPOS_DOCUMENTO[0];
 
     const errores = {
         numeroDocumento: !numeroDocumento
             ? 'Ingrese su número de documento.'
-            : !DOCUMENTO_REGEX.test(numeroDocumento)
-            ? 'El número de documento debe tener mínimo 9 dígitos.'
+            : numeroDocumento.length < regla.min || numeroDocumento.length > regla.max
+            ? `El número de documento debe tener entre ${regla.min} y ${regla.max} dígitos.`
             : '',
         password: !password ? 'Ingrese su contraseña.' : '',
     };
 
     const isFormValido = !errores.numeroDocumento && !errores.password;
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setTouched({ numeroDocumento: true, password: true });
-        setSubmitError(false);
+        setSubmitError('');
 
-        if (!isFormValido) return;
+        if (!isFormValido || enviando) return;
 
-        // [BACKEND INTEGRATION]:
-        // Endpoint: POST /api/v1/auth/login
-        // Payload: { tipoDocumento, numeroDocumento, password }
-        const match = CREDENCIALES_PRUEBA.find(
-            (c) =>
-                c.tipoDocumento === tipoDocumento &&
-                c.numeroDocumento === numeroDocumento.trim() &&
-                c.password === password
-        );
-
-        if (!match) {
-            setSubmitError(true);
-            return;
+        setEnviando(true);
+        try {
+            const { accessToken, usuario } = await iniciarSesion({
+                tipoDocumento,
+                numeroDocumento,
+                contrasena: password,
+            });
+            guardarSesion(accessToken, usuario);
+            // replace: el login sale del historial y Atrás no vuelve a él.
+            router.replace('/dashboard');
+        } catch (error) {
+            // Muestra el mensaje del backend: credenciales incorrectas, usuario inactivo, servidor caído...
+            setSubmitError(error instanceof ErrorApi ? error.message : 'Ocurrió un error inesperado');
+            setEnviando(false);
         }
-
-        if (typeof window !== 'undefined') {
-            window.localStorage.setItem('sena-matriz-active-role', match.perfil.rol);
-        }
-
-        router.push('/dashboard');
     };
 
     return (
@@ -144,7 +78,7 @@ export default function LoginPage() {
                                     d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
                                 />
                             </svg>
-                            <span>Credenciales inválidas. Verifique su tipo y número de documento y contraseña.</span>
+                            <span>{submitError}</span>
                         </div>
                     )}
 
@@ -155,12 +89,12 @@ export default function LoginPage() {
                             </label>
                             <select
                                 value={tipoDocumento}
-                                onChange={(e) => setTipoDocumento(e.target.value as TipoDocumento)}
+                                onChange={(e) => setTipoDocumento(e.target.value as CodigoTipoDocumento)}
                                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm bg-white transition focus:outline-none focus:ring-2 focus:ring-[#39A900]"
                             >
                                 {TIPOS_DOCUMENTO.map((t) => (
-                                    <option key={t} value={t}>
-                                        {t}
+                                    <option key={t.codigo} value={t.codigo}>
+                                        {t.nombre}
                                     </option>
                                 ))}
                             </select>
@@ -174,11 +108,11 @@ export default function LoginPage() {
                                 type="text"
                                 inputMode="numeric"
                                 pattern="[0-9]*"
-                                maxLength={15}
+                                maxLength={regla.max}
                                 value={numeroDocumento}
                                 onChange={(e) => {
                                     setNumeroDocumento(e.target.value.replace(/\D/g, ''));
-                                    setSubmitError(false);
+                                    setSubmitError('');
                                 }}
                                 onBlur={() => setTouched((prev) => ({ ...prev, numeroDocumento: true }))}
                                 placeholder="Ej: 1000123456"
@@ -202,7 +136,7 @@ export default function LoginPage() {
                                 value={password}
                                 onChange={(e) => {
                                     setPassword(e.target.value);
-                                    setSubmitError(false);
+                                    setSubmitError('');
                                 }}
                                 onBlur={() => setTouched((prev) => ({ ...prev, password: true }))}
                                 placeholder="••••••••"
@@ -217,9 +151,10 @@ export default function LoginPage() {
 
                         <button
                             type="submit"
-                            className="w-full rounded-full bg-[#39A900] hover:bg-[#329600] text-white text-sm font-semibold px-6 py-2.5 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-[#39A900] focus:ring-offset-2"
+                            disabled={enviando}
+                            className="w-full rounded-full bg-[#39A900] hover:bg-[#329600] disabled:opacity-60 disabled:cursor-wait text-white text-sm font-semibold px-6 py-2.5 shadow-sm transition focus:outline-none focus:ring-2 focus:ring-[#39A900] focus:ring-offset-2"
                         >
-                            Ingresar
+                            {enviando ? 'Ingresando...' : 'Ingresar'}
                         </button>
                     </form>
 

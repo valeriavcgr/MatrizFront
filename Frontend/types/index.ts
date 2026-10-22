@@ -119,45 +119,75 @@ export interface CentroFormacion {
 }
 
 /**
- * Modalidad de Formación institucional
+ * Modalidad de Formación (tabla `modalidad`).
  */
-export interface ModalidadFormacion {
-    id: string;
-    codigo: string;
-    nombre: string;
-    descripcion: string;
-    presencialidad: string;
-    plataforma: string;
-    estado: 'Activo' | 'Inactivo';
-}
+export type Modalidad = ItemCatalogo;
 
 /**
- * Jornada de Formación académica
+ * Jornada de Formación (tabla `jornadas`).
  */
-export interface JornadaFormacion {
-    id: string;
-    codigo: string;
-    nombre: string;
-    horario: string;
-    descripcion: string;
-    diasAtencion: string;
-    estado: 'Activo' | 'Inactivo';
-}
+export type Jornada = ItemCatalogo;
 
 /**
- * Tipo de Oferta de Formación (tabla `tipo_oferta`).
- * El código lo asigna la BD; no se borran, se activan / desactivan.
+ * Registro de un catálogo simple de parametrización (tipos de oferta,
+ * modalidades, jornadas). El código lo asigna la BD; no se borran,
+ * se activan / desactivan.
  */
-export interface TipoOferta {
+export interface ItemCatalogo {
     codigo: number;
     nombre: string;
     estado: boolean;
 }
 
 /**
+ * Tipo de Oferta de Formación (tabla `tipo_oferta`).
+ */
+export type TipoOferta = ItemCatalogo;
+
+/**
  * Roles de usuario en el sistema SENA Matriz
  */
 export type UserRole = 'ADMINISTRADOR' | 'LIDER_PLANEACION' | 'SUBDIRECTOR';
+
+/**
+ * Tipos de documento con los que se puede iniciar sesión (tabla `tipo_documento`).
+ * La longitud debe coincidir con REGLAS_DOCUMENTO del backend (common/validators/reglas.ts).
+ */
+export const TIPOS_DOCUMENTO = [
+    { codigo: 'CC', nombre: 'Cédula de ciudadanía', min: 7, max: 10 },
+    { codigo: 'CE', nombre: 'Cédula de extranjería', min: 6, max: 10 },
+] as const;
+
+export type CodigoTipoDocumento = (typeof TIPOS_DOCUMENTO)[number]['codigo'];
+
+/**
+ * Datos que envía el formulario de login a POST /auth/login
+ */
+export interface CredencialesLogin {
+    tipoDocumento: CodigoTipoDocumento;
+    numeroDocumento: string;
+    contrasena: string;
+}
+
+/**
+ * Usuario autenticado tal como lo devuelve el backend
+ */
+export interface UsuarioSesion {
+    tipoDocumento: string;
+    numeroDocumento: string;
+    nombres: string;
+    apellidos: string;
+    correo: string;
+    rol: UserRole;
+}
+
+/**
+ * Respuesta de POST /auth/login
+ */
+export interface RespuestaLogin {
+    accessToken: string;
+    usuario: UsuarioSesion;
+}
 
 /**
  * Perfil del usuario autenticado

@@ -1,13 +1,28 @@
 /**
- * Crea (o actualiza) el usuario ADMINISTRADOR inicial con los datos ADMIN_* del .env.
- * Uso: pnpm db:seed
+ * Carga los datos que el backend necesita para funcionar:
+ *   - roles: @Roles('ADMINISTRADOR') compara el texto exacto.
+ *   - tipos de documento: deben coincidir con REGLAS_DOCUMENTO (common/validators/reglas.ts).
+ *   - el usuario ADMINISTRADOR inicial, con los datos ADMIN_* del .env.
+ * Se puede ejecutar varias veces: inserta lo que falta y actualiza lo que existe.
+ * Uso: pnpm db:seed  (después de pnpm db:migrate)
  */
 import bcrypt from 'bcrypt';
 import { CONTRASENA, REGLAS_DOCUMENTO } from '../common/validators/reglas.js';
 import baseDatos from './data-source.js';
-import { Usuario } from './entities/index.js';
+import { Rol, TipoDocumento, Usuario } from './entities/index.js';
 
 const ROL_ADMINISTRADOR = 1;
+
+const ROLES = [
+    { id_roles: ROL_ADMINISTRADOR, rol: 'ADMINISTRADOR' },
+    { id_roles: 2, rol: 'LIDER_PLANEACION' },
+    { id_roles: 3, rol: 'SUBDIRECTOR' },
+];
+
+const TIPOS_DOCUMENTO = [
+    { tipo_doc: 'CC', desc_tdoc: 'Cédula de ciudadanía' },
+    { tipo_doc: 'CE', desc_tdoc: 'Cédula de extranjería' },
+];
 
 function requerida(nombre: string): string {
     const valor = process.env[nombre]?.trim();
@@ -40,20 +55,27 @@ async function main() {
 
     await baseDatos.initialize();
 
-    // save() inserta si el documento no existe y actualiza si ya existe.
-    await baseDatos.getRepository(Usuario).save({
-        pkfk_tdoc: tipo,
-        id_usuarios: numero,
-        fk_rol: ROL_ADMINISTRADOR,
-        nombres_usu: requerida('ADMIN_NOMBRES'),
-        apellidos_usu: requerida('ADMIN_APELLIDOS'),
-        correo_institucional: requerida('ADMIN_CORREO'),
-        pass_usu: await bcrypt.hash(contrasena, 10),
-        estado_usu: true,
+    // Todo o nada. save() inserta si la llave no existe y actualiza si ya existe.
+    // Orden: el administrador referencia un rol y un tipo de documento.
+    await baseDatos.transaction(async (bd) => {
+        await bd.getRepository(Rol).save(ROLES);
+        await bd.getRepository(TipoDocumento).save(TIPOS_DOCUMENTO);
+        await bd.getRepository(Usuario).save({
+            pkfk_tdoc: tipo,
+            id_usuarios: numero,
+            fk_rol: ROL_ADMINISTRADOR,
+            nombres_usu: requerida('ADMIN_NOMBRES'),
+            apellidos_usu: requerida('ADMIN_APELLIDOS'),
+            correo_institucional: requerida('ADMIN_CORREO'),
+            pass_usu: await bcrypt.hash(contrasena, 10),
+            estado_usu: true,
+        });
     });
     await baseDatos.destroy();
 
-    console.log(`Administrador ${tipo} ${numero} listo`);
+    console.log(
+        `Roles, tipos de documento y administrador ${tipo} ${numero} listos`,
+    );
 }
 
 main().catch((error: unknown) => {

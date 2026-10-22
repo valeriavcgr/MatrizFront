@@ -6,7 +6,6 @@ import {
     PrimaryColumn,
     type Relation,
 } from 'typeorm';
-import { EN_CASCADA } from './en-cascada.js';
 import { Usuario } from './usuario.entity.js';
 
 @Entity('subdirector')
@@ -27,7 +26,7 @@ export class Subdirector {
     @Column({ type: 'boolean', default: true })
     estado_subdirector: boolean;
 
-    @OneToOne(() => Usuario, EN_CASCADA)
+    @OneToOne(() => Usuario, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     @JoinColumn([
         {
             name: 'pkfk_tdoc_subdirec',

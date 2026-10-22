@@ -7,14 +7,13 @@ import {
     type Relation,
 } from 'typeorm';
 import { CentroFormacion } from './centro-formacion.entity.js';
-import { EN_CASCADA } from './en-cascada.js';
 
 @Entity('programas')
 export class Programa {
     @PrimaryColumn({ type: 'int', primaryKeyConstraintName: 'programas_pkey' })
     n_programa: number;
 
-    @Column({ type: 'varchar', length: 50 })
+    @Column({ type: 'varchar', length: 150 })
     nom_programa: string;
 
     @Column({ type: 'varchar', length: 15 })
@@ -26,10 +25,14 @@ export class Programa {
     @Column({ type: 'boolean', default: true })
     estado_programa: boolean;
 
+    /** Línea medular: el centro de formación donde nació el programa. */
     @Column({ type: 'int' })
     fk_linea_medular: number;
 
-    @ManyToOne(() => CentroFormacion, EN_CASCADA)
+    @ManyToOne(() => CentroFormacion, {
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+    })
     @JoinColumn({
         name: 'fk_linea_medular',
         referencedColumnName: 'id_centro_formacion',

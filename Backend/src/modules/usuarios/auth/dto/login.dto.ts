@@ -1,20 +1,10 @@
 import { Transform } from 'class-transformer';
-import {
-    IsIn,
-    IsNotEmpty,
-    IsString,
-    MaxLength,
-    MinLength,
-} from 'class-validator';
-import {
-    TieneCaracterEspecial,
-    TieneMayuscula,
-} from '../../../common/validators/contrasena.validator.js';
-import { EsNumeroDocumento } from '../../../common/validators/documento.validator.js';
+import { IsIn, IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { EsNumeroDocumento } from '../../../../common/validators/documento.validator.js';
 import {
     CONTRASENA,
     TIPOS_DOCUMENTO,
-} from '../../../common/validators/reglas.js';
+} from '../../../../common/validators/reglas.js';
 
 const recortar = ({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim() : value;
@@ -32,14 +22,12 @@ export class LoginDto {
     @EsNumeroDocumento('tipoDocumento')
     numeroDocumento: string;
 
+    // Al iniciar sesión solo se exige que venga: las reglas de complejidad se
+    // validan al crear la contraseña, y aquí revelarían cómo debe ser.
     @IsString({ message: 'La contraseña es obligatoria' })
-    @MinLength(CONTRASENA.min, {
-        message: `La contraseña debe tener mínimo ${CONTRASENA.min} caracteres`,
-    })
+    @IsNotEmpty({ message: 'La contraseña es obligatoria' })
     @MaxLength(CONTRASENA.max, {
         message: `La contraseña debe tener máximo ${CONTRASENA.max} caracteres`,
     })
-    @TieneMayuscula()
-    @TieneCaracterEspecial()
     contrasena: string;
 }

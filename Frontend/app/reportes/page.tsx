@@ -21,7 +21,7 @@ export default function ReportesPage() {
     const [notificacion, setNotificacion] = useState<string | null>(null);
 
     // Historial simulado de reportes generados
-    // [BACKEND INTEGRATION]: GET /api/v1/reportes/historial
+    // [BACKEND INTEGRATION]: GET /reportes/historial
     const [historial, setHistorial] = useState<ReporteRegistro[]>([
         {
             id: 'rep-01',
@@ -92,7 +92,7 @@ export default function ReportesPage() {
         setGenerandoId(id);
 
         // [BACKEND INTEGRATION]:
-        // Endpoint: POST /api/v1/reportes/generar
+        // Endpoint: POST /reportes/generar
         // Payload: { reporteId: id, formato: 'PDF', vigencia: 2026 }
         setTimeout(() => {
             setGenerandoId(null);
@@ -114,7 +114,7 @@ export default function ReportesPage() {
         setExportandoFormato(formato);
 
         // [BACKEND INTEGRATION]:
-        // Endpoint: GET /api/v1/reportes/export?formato={formato}&vigencia=2026
+        // Endpoint: GET /reportes/export?formato={formato}&vigencia=2026
         setTimeout(() => {
             setExportandoFormato(null);
             triggerNotificacion(`Consolidado institucional exportado en formato ${formato}.`);
@@ -170,7 +170,7 @@ export default function ReportesPage() {
                 <button
                     type="button"
                     onClick={() => {
-                        // [BACKEND INTEGRATION]: GET /api/v1/reportes/{id}/download
+                        // [BACKEND INTEGRATION]: GET /reportes/{id}/download
                         alert(`Iniciando descarga de: ${item.nombre}`);
                     }}
                     className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold text-[#00324D] hover:text-[#39A900] hover:bg-green-50 transition"
@@ -188,7 +188,6 @@ export default function ReportesPage() {
         <AppShell
             title="Generación y Análisis de Reportes"
             subtitle="Extracción de indicadores estratégicos, cumplimiento de planes y consolidación documental"
-            initialRole="SUBDIRECTOR"
         >
             {/* Banner de notificación */}
             {notificacion && (

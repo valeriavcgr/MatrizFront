@@ -21,9 +21,9 @@ export default function ParametrizacionProgramasPage() {
 
     // Lista institucional de programas académicos
     // [BACKEND INTEGRATION]:
-    // Endpoint: GET /api/v1/parametrizacion/programas
+    // Endpoint: GET /parametrizacion/programas
     // useEffect(() => {
-    //   fetch('/api/v1/parametrizacion/programas')
+    //   fetch('/parametrizacion/programas')
     //     .then(res => res.json())
     //     .then(data => setProgramas(data));
     // }, []);
@@ -127,7 +127,7 @@ export default function ParametrizacionProgramasPage() {
     // Guardar nuevo o editar programa
     const handleGuardarPrograma = (nuevoData: Omit<ProgramaAcademico, 'id'>) => {
         if (programaAEditar) {
-            // [BACKEND INTEGRATION]: PUT /api/v1/parametrizacion/programas/{id}
+            // [BACKEND INTEGRATION]: PUT /parametrizacion/programas/{id}
             setProgramas(
                 programas.map((p) =>
                     p.id === programaAEditar.id ? { ...nuevoData, id: p.id } : p
@@ -135,7 +135,7 @@ export default function ParametrizacionProgramasPage() {
             );
             triggerNotificacion(`Programa ${nuevoData.codigo} actualizado correctamente.`);
         } else {
-            // [BACKEND INTEGRATION]: POST /api/v1/parametrizacion/programas
+            // [BACKEND INTEGRATION]: POST /parametrizacion/programas
             const nuevo: ProgramaAcademico = {
                 ...nuevoData,
                 id: `prog-${programas.length + 1}`,
@@ -149,7 +149,7 @@ export default function ParametrizacionProgramasPage() {
 
     // Alternar estado de un programa
     const handleToggleEstado = (id: string) => {
-        // [BACKEND INTEGRATION]: PATCH /api/v1/parametrizacion/programas/{id}/estado
+        // [BACKEND INTEGRATION]: PATCH /parametrizacion/programas/{id}/estado
         setProgramas(
             programas.map((p) => {
                 if (p.id === id) {
@@ -284,7 +284,6 @@ export default function ParametrizacionProgramasPage() {
         <AppShell
             title="Parametrización - Programas Académicos"
             subtitle="Administración del catálogo de programas para conformación de la oferta formativa"
-            initialRole="ADMINISTRADOR"
         >
             {/* Banner de notificación */}
             {notificacion && (

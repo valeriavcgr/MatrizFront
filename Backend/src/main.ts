@@ -7,8 +7,6 @@ async function bootstrap() {
     const app = await NestFactory.create(AppModule);
     const config = app.get(ConfigService);
 
-    app.setGlobalPrefix('api/v1');
-
     // El front (otro puerto) puede llamar a la API y enviar el header Authorization.
     app.enableCors({
         origin: config.get<string>('FRONTEND_URL', 'http://localhost:3000'),

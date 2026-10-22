@@ -5,8 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { TipoOferta } from '../../database/entities/index.js';
-import { GuardarTipoOfertaDto } from './dto/tipo-oferta.dto.js';
+import { TipoOferta } from '../../../database/entities/index.js';
+import { NombreCatalogoDto } from '../../../common/dto/nombre-catalogo.dto.js';
 
 /**
  * Catálogo de tipos de oferta. No se borran: se activan o desactivan
@@ -31,7 +31,7 @@ export class TiposOfertaService {
         return this.aRespuesta(await this.buscar(codigo));
     }
 
-    async crear(dto: GuardarTipoOfertaDto) {
+    async crear(dto: NombreCatalogoDto) {
         await this.validarNombreDisponible(dto.nombre);
         const tipo = await this.tiposOferta.save(
             this.tiposOferta.create({ desc_tipo_oferta: dto.nombre }),
@@ -39,7 +39,7 @@ export class TiposOfertaService {
         return this.aRespuesta(tipo);
     }
 
-    async actualizar(codigo: number, dto: GuardarTipoOfertaDto) {
+    async actualizar(codigo: number, dto: NombreCatalogoDto) {
         const tipo = await this.buscar(codigo);
         await this.validarNombreDisponible(dto.nombre, codigo);
         tipo.desc_tipo_oferta = dto.nombre;

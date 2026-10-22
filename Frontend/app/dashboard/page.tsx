@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/Badge';
 import { EstadoMatriz, MatrizPriorizacion, TableColumn } from '@/types';
 
 // [BACKEND INTEGRATION]:
-// Endpoint: GET /api/v1/matrices?recientes=true
+// Endpoint: GET /matrices?recientes=true
 const MATRICES_INICIALES: MatrizPriorizacion[] = [
     {
         id: 'mat-1',

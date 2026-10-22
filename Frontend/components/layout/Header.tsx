@@ -1,29 +1,27 @@
 'use client';
 
 import React from 'react';
-import { UserRole } from '@/types';
+import { UsuarioSesion } from '@/types';
 import { RoleAvatar } from '@/components/ui/RoleAvatar';
 import { Badge } from '@/components/ui/Badge';
 
 interface HeaderProps {
     title: string;
     subtitle?: string;
-    role: UserRole;
+    usuario: UsuarioSesion;
     onMenuClick?: () => void;
-    onRoleChange?: (newRole: UserRole) => void;
 }
 
 /**
  * Cabecera institucional del sistema SENA Matriz.
- * Incorpora navegación contextual, insignia de vigencia institucional,
- * notificaciones y avatar de rol diferenciado.
+ * Incorpora navegación contextual, insignia de vigencia institucional
+ * y el avatar del usuario de la sesión.
  */
 export const Header: React.FC<HeaderProps> = ({
     title,
     subtitle,
-    role,
+    usuario,
     onMenuClick,
-    onRoleChange,
 }) => {
     return (
         <header className="bg-white border-b border-slate-200 px-6 py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-30 shadow-xs">
@@ -54,52 +52,10 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
 
             <div className="flex items-center justify-between md:justify-end gap-4">
-                {/* Selector rápido de rol (para demostración y pruebas institucionales) */}
-                {onRoleChange && (
-                    <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-full text-xs">
-                        <span className="text-[11px] font-medium text-slate-500 px-2 hidden xl:inline">
-                            Rol Activo:
-                        </span>
-                        <button
-                            type="button"
-                            onClick={() => onRoleChange('ADMINISTRADOR')}
-                            className={`px-2.5 py-1 rounded-full font-medium transition ${
-                                role === 'ADMINISTRADOR'
-                                    ? 'bg-[#00324D] text-white shadow-xs'
-                                    : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                        >
-                            Admin
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => onRoleChange('LIDER_PLANEACION')}
-                            className={`px-2.5 py-1 rounded-full font-medium transition ${
-                                role === 'LIDER_PLANEACION'
-                                    ? 'bg-[#39A900] text-white shadow-xs'
-                                    : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                        >
-                            Coordinador
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => onRoleChange('SUBDIRECTOR')}
-                            className={`px-2.5 py-1 rounded-full font-medium transition ${
-                                role === 'SUBDIRECTOR'
-                                    ? 'bg-[#854D0E] text-white shadow-xs'
-                                    : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                        >
-                            Subdirector
-                        </button>
-                    </div>
-                )}
-
                 <div className="h-6 w-px bg-slate-200 hidden md:block" />
 
-                {/* Avatar de rol diferenciado */}
-                <RoleAvatar role={role} size="md" />
+                {/* Usuario de la sesión con avatar de rol diferenciado */}
+                <RoleAvatar role={usuario.rol} nombre={`${usuario.nombres} ${usuario.apellidos}`} size="md" />
             </div>
         </header>
     );

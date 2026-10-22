@@ -7,7 +7,6 @@ import {
     PrimaryColumn,
     type Relation,
 } from 'typeorm';
-import { EN_CASCADA } from './en-cascada.js';
 import { Rol } from './rol.entity.js';
 import { TipoDocumento } from './tipo-documento.entity.js';
 
@@ -46,7 +45,7 @@ export class Usuario {
     @Column({ type: 'varchar', length: 255 })
     pass_usu: string;
 
-    @ManyToOne(() => Rol, EN_CASCADA)
+    @ManyToOne(() => Rol, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     @JoinColumn({
         name: 'fk_rol',
         referencedColumnName: 'id_roles',
@@ -54,7 +53,10 @@ export class Usuario {
     })
     roles: Relation<Rol>;
 
-    @ManyToOne(() => TipoDocumento, EN_CASCADA)
+    @ManyToOne(() => TipoDocumento, {
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+    })
     @JoinColumn({
         name: 'pkfk_tdoc',
         referencedColumnName: 'tipo_doc',

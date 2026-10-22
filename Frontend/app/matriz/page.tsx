@@ -9,7 +9,7 @@ import { CriteriosModal } from '@/components/matriz/CriteriosModal';
 import { CriterioPriorizacion, EstadoMatriz, MatrizPriorizacion, TableColumn } from '@/types';
 
 // [BACKEND INTEGRATION]:
-// Endpoint: GET /api/v1/matrices
+// Endpoint: GET /matrices
 const MATRICES_INICIALES: MatrizPriorizacion[] = [
     {
         id: 'mat-1',
@@ -167,7 +167,6 @@ export default function MatrizPage() {
         <AppShell
             title="Matriz de Priorización"
             subtitle="Gestión y creación de matrices de priorización institucional"
-            initialRole="LIDER_PLANEACION"
         >
             {/* Tarjeta de acción principal + tabla de matrices */}
             <section className="space-y-3">

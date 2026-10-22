@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { TipoOferta } from '../../database/entities/index.js';
+import { TipoOferta } from '../../../database/entities/index.js';
 import { TiposOfertaController } from './tipos-oferta.controller.js';
 import { TiposOfertaService } from './tipos-oferta.service.js';
 

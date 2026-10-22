@@ -6,7 +6,6 @@ import {
     PrimaryColumn,
     type Relation,
 } from 'typeorm';
-import { EN_CASCADA } from './en-cascada.js';
 import { Subdirector } from './subdirector.entity.js';
 
 @Entity('centro_formacion')
@@ -23,13 +22,16 @@ export class CentroFormacion {
     @Column({ type: 'varchar', length: 10 })
     sigla: string;
 
+    @Column({ type: 'boolean', default: true })
+    estado_centro: boolean;
+
     @Column({ type: 'varchar', length: 10 })
     fk_tdoc_subdirector: string;
 
     @Column({ type: 'bigint' })
     fk_id_subdirector: string;
 
-    @ManyToOne(() => Subdirector, EN_CASCADA)
+    @ManyToOne(() => Subdirector, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     @JoinColumn([
         {
             name: 'fk_tdoc_subdirector',

@@ -41,7 +41,7 @@ const CentroForm: React.FC<CentroFormProps> = ({
 
         if (!isValido) return;
 
-        // [BACKEND INTEGRATION]: POST /api/v1/parametrizacion/centros
+        // [BACKEND INTEGRATION]: POST /parametrizacion/centros
         onSave({
             codigo: codigo.trim().toUpperCase(),
             nombre: nombre.trim(),
@@ -215,7 +215,7 @@ export default function ParametrizacionCentrosPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const pageSize = 5;
 
-    // [BACKEND INTEGRATION]: GET /api/v1/parametrizacion/centros
+    // [BACKEND INTEGRATION]: GET /parametrizacion/centros
     const [centros, setCentros] = useState<CentroFormacion[]>([
         {
             id: 'cen-01',
@@ -296,11 +296,11 @@ export default function ParametrizacionCentrosPage() {
 
     const handleGuardarCentro = (data: Omit<CentroFormacion, 'id'>) => {
         if (centroAEditar) {
-            // [BACKEND INTEGRATION]: PUT /api/v1/parametrizacion/centros/{id}
+            // [BACKEND INTEGRATION]: PUT /parametrizacion/centros/{id}
             setCentros(centros.map((c) => (c.id === centroAEditar.id ? { ...data, id: c.id } : c)));
             triggerNotificacion(`Centro ${data.codigo} actualizado con éxito.`);
         } else {
-            // [BACKEND INTEGRATION]: POST /api/v1/parametrizacion/centros
+            // [BACKEND INTEGRATION]: POST /parametrizacion/centros
             const nuevo: CentroFormacion = {
                 ...data,
                 id: `cen-0${centros.length + 1}`,
@@ -419,7 +419,6 @@ export default function ParametrizacionCentrosPage() {
         <AppShell
             title="Parametrización - Centros de Formación"
             subtitle="Gestión y registro de centros de formación y subdirecciones regionales SENA"
-            initialRole="ADMINISTRADOR"
         >
             {notificacion && (
                 <div className="p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 text-sm font-medium flex items-center justify-between shadow-xs animate-fade-in">

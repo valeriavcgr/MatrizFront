@@ -52,7 +52,7 @@ const RevisionForm: React.FC<RevisionFormProps> = ({ decisionType, onClose, onSu
         if (!isValido) return;
 
         // [BACKEND INTEGRATION]:
-        // Endpoint: POST /api/v1/aval/{solicitudId}/decision
+        // Endpoint: POST /aval/{solicitudId}/decision
         // Payload: { decision: decisionType, observaciones }
         onSubmit(observaciones.trim());
         onClose();

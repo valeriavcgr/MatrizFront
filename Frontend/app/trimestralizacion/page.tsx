@@ -111,7 +111,6 @@ export default function TrimestralizacionPage() {
         <AppShell
             title="Trimestralización de Oferta Formativa"
             subtitle="Distribución temporal de cupos por trimestre formativo para la vigencia activa"
-            initialRole="LIDER_PLANEACION"
         >
             <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex items-center justify-between">
                 <div>

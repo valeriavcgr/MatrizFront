@@ -7,7 +7,6 @@ import {
     type Relation,
 } from 'typeorm';
 import { DocumentoTrabajo } from './documento-trabajo.entity.js';
-import { EN_CASCADA } from './en-cascada.js';
 import { Jornada } from './jornada.entity.js';
 import { Modalidad } from './modalidad.entity.js';
 import { Programa } from './programa.entity.js';
@@ -37,7 +36,10 @@ export class DocTrabajoPrograma {
     @Column({ type: 'int' })
     fk_jornada: number;
 
-    @ManyToOne(() => DocumentoTrabajo, EN_CASCADA)
+    @ManyToOne(() => DocumentoTrabajo, {
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+    })
     @JoinColumn({
         name: 'pkfk_doc_trabajo',
         referencedColumnName: 'id_documento_trabajo',
@@ -46,7 +48,7 @@ export class DocTrabajoPrograma {
     })
     documento_trabajo: Relation<DocumentoTrabajo>;
 
-    @ManyToOne(() => Jornada, EN_CASCADA)
+    @ManyToOne(() => Jornada, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     @JoinColumn({
         name: 'fk_jornada',
         referencedColumnName: 'cod_jornada',
@@ -55,7 +57,7 @@ export class DocTrabajoPrograma {
     })
     jornadas: Relation<Jornada>;
 
-    @ManyToOne(() => Modalidad, EN_CASCADA)
+    @ManyToOne(() => Modalidad, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     @JoinColumn({
         name: 'fk_modalidad',
         referencedColumnName: 'cod_modalidad',
@@ -64,7 +66,7 @@ export class DocTrabajoPrograma {
     })
     modalidad: Relation<Modalidad>;
 
-    @ManyToOne(() => Programa, EN_CASCADA)
+    @ManyToOne(() => Programa, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     @JoinColumn({
         name: 'pkfk_n_programa',
         referencedColumnName: 'n_programa',
@@ -73,7 +75,7 @@ export class DocTrabajoPrograma {
     })
     programas: Relation<Programa>;
 
-    @ManyToOne(() => TipoOferta, EN_CASCADA)
+    @ManyToOne(() => TipoOferta, { onDelete: 'CASCADE', onUpdate: 'CASCADE' })
     @JoinColumn({
         name: 'fk_tipo_oferta',
         referencedColumnName: 'cod_tipo_oferta',

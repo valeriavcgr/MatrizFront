@@ -1,26 +1,20 @@
 import {
-    BadRequestException,
     Body,
     Controller,
     Get,
     Param,
-    ParseIntPipe,
     Patch,
     Post,
     Query,
 } from '@nestjs/common';
-import { Roles } from '../../common/decorators/roles.decorator.js';
+import { Roles } from '../../../common/decorators/roles.decorator.js';
 import {
     CambiarEstadoDto,
-    FiltroTiposOfertaDto,
-    GuardarTipoOfertaDto,
-} from './dto/tipo-oferta.dto.js';
+    FiltroEstadoDto,
+} from '../../../common/dto/estado.dto.js';
+import { NombreCatalogoDto } from '../../../common/dto/nombre-catalogo.dto.js';
+import { codigoValido } from '../../../common/pipes/codigo.pipe.js';
 import { TiposOfertaService } from './tipos-oferta.service.js';
-
-const codigoValido = new ParseIntPipe({
-    exceptionFactory: () =>
-        new BadRequestException('El código debe ser un número'),
-});
 
 /**
  * Consultar: cualquier usuario autenticado (otros módulos usan el catálogo).
@@ -30,36 +24,36 @@ const codigoValido = new ParseIntPipe({
 export class TiposOfertaController {
     constructor(private readonly tiposOferta: TiposOfertaService) {}
 
-    /** GET /api/v1/parametrizacion/tipos-oferta?estado=true|false */
+    /** GET /parametrizacion/tipos-oferta?estado=true|false */
     @Get()
-    listar(@Query() filtro: FiltroTiposOfertaDto) {
+    listar(@Query() filtro: FiltroEstadoDto) {
         return this.tiposOferta.listar(filtro.estado);
     }
 
-    /** GET /api/v1/parametrizacion/tipos-oferta/:codigo */
+    /** GET /parametrizacion/tipos-oferta/:codigo */
     @Get(':codigo')
     consultar(@Param('codigo', codigoValido) codigo: number) {
         return this.tiposOferta.consultar(codigo);
     }
 
-    /** POST /api/v1/parametrizacion/tipos-oferta → { codigo, nombre, estado } */
+    /** POST /parametrizacion/tipos-oferta → { codigo, nombre, estado } */
     @Roles('ADMINISTRADOR')
     @Post()
-    crear(@Body() dto: GuardarTipoOfertaDto) {
+    crear(@Body() dto: NombreCatalogoDto) {
         return this.tiposOferta.crear(dto);
     }
 
-    /** PATCH /api/v1/parametrizacion/tipos-oferta/:codigo */
+    /** PATCH /parametrizacion/tipos-oferta/:codigo */
     @Roles('ADMINISTRADOR')
     @Patch(':codigo')
     actualizar(
         @Param('codigo', codigoValido) codigo: number,
-        @Body() dto: GuardarTipoOfertaDto,
+        @Body() dto: NombreCatalogoDto,
     ) {
         return this.tiposOferta.actualizar(codigo, dto);
     }
 
-    /** PATCH /api/v1/parametrizacion/tipos-oferta/:codigo/estado → activar / desactivar */
+    /** PATCH /parametrizacion/tipos-oferta/:codigo/estado → activar / desactivar */
     @Roles('ADMINISTRADOR')
     @Patch(':codigo/estado')
     cambiarEstado(

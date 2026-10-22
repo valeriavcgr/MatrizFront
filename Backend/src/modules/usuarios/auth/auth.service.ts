@@ -7,8 +7,8 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
-import { Usuario } from '../../database/entities/index.js';
-import type { UsuarioToken } from '../../common/interfaces/usuario-token.interface.js';
+import { Usuario } from '../../../database/entities/index.js';
+import type { UsuarioToken } from '../../../common/interfaces/usuario-token.interface.js';
 import { LoginDto } from './dto/login.dto.js';
 
 const CREDENCIALES_INVALIDAS = 'Documento o contraseña incorrectos';

@@ -17,9 +17,9 @@ export default function CriteriosMatrizPage() {
 
     // Criterios iniciales articulados al Plan de Gobierno Institucional
     // [BACKEND INTEGRATION]:
-    // Endpoint: GET /api/v1/matrices/MP-001
+    // Endpoint: GET /matrices/MP-001
     // useEffect(() => {
-    //   fetch('/api/v1/matrices/MP-001')
+    //   fetch('/matrices/MP-001')
     //     .then(res => res.json())
     //     .then(data => setCriterios(data.criterios));
     // }, []);
@@ -60,7 +60,7 @@ export default function CriteriosMatrizPage() {
     // Manejador para agregar o editar un criterio
     const handleGuardarCriterio = (criterioData: Omit<CriterioPriorizacion, 'id'>) => {
         if (criterioAEditar) {
-            // [BACKEND INTEGRATION]: PUT /api/v1/matrices/MP-001/criterios/{id}
+            // [BACKEND INTEGRATION]: PUT /matrices/MP-001/criterios/{id}
             setCriterios(
                 criterios.map((c) =>
                     c.id === criterioAEditar.id ? { ...criterioData, id: c.id } : c
@@ -68,7 +68,7 @@ export default function CriteriosMatrizPage() {
             );
             mostrarNotificacion('success', `Criterio "${criterioData.criterio}" actualizado con éxito.`);
         } else {
-            // [BACKEND INTEGRATION]: POST /api/v1/matrices/MP-001/criterios
+            // [BACKEND INTEGRATION]: POST /matrices/MP-001/criterios
             const nuevoCriterio: CriterioPriorizacion = {
                 ...criterioData,
                 id: `crit-${criterios.length + 1}`,
@@ -83,7 +83,7 @@ export default function CriteriosMatrizPage() {
     // Manejador para eliminar un criterio
     const handleEliminarCriterio = (id: string, nombre: string) => {
         if (confirm(`¿Confirma que desea retirar el criterio "${nombre}" de la matriz?`)) {
-            // [BACKEND INTEGRATION]: DELETE /api/v1/matrices/MP-001/criterios/{id}
+            // [BACKEND INTEGRATION]: DELETE /matrices/MP-001/criterios/{id}
             setCriterios(criterios.filter((c) => c.id !== id));
             mostrarNotificacion('info', `Criterio "${nombre}" retirado de la matriz.`);
         }
@@ -97,7 +97,7 @@ export default function CriteriosMatrizPage() {
 
     // Guardar borrador de la matriz
     const handleGuardarMatriz = () => {
-        // [BACKEND INTEGRATION]: POST /api/v1/matrices/MP-001/borrador
+        // [BACKEND INTEGRATION]: POST /matrices/MP-001/borrador
         mostrarNotificacion('info', 'Matriz de priorización guardada como borrador.');
     };
 
@@ -111,7 +111,7 @@ export default function CriteriosMatrizPage() {
             return;
         }
 
-        // [BACKEND INTEGRATION]: POST /api/v1/matrices/MP-001/aprobar-para-trimestralizacion
+        // [BACKEND INTEGRATION]: POST /matrices/MP-001/aprobar-para-trimestralizacion
         mostrarNotificacion(
             'success',
             '¡Matriz validada al 100%! Redirigiendo a Trimestralización de cuotas...'
@@ -158,7 +158,7 @@ export default function CriteriosMatrizPage() {
                 <button
                     type="button"
                     onClick={() => {
-                        // [BACKEND INTEGRATION]: GET /api/v1/documentos/download?file={item.soporte}
+                        // [BACKEND INTEGRATION]: GET /documentos/download?file={item.soporte}
                         alert(`Descargando documento soporte institucional: ${item.soporte}`);
                     }}
                     className="inline-flex items-center gap-1.5 text-xs text-[#00324D] hover:text-[#39A900] font-medium transition group focus:outline-none"
@@ -237,7 +237,6 @@ export default function CriteriosMatrizPage() {
         <AppShell
             title="Matriz de Priorización - Criterios"
             subtitle="Asignación y ponderación de variables del Plan de Gobierno para la oferta formativa"
-            initialRole="LIDER_PLANEACION"
         >
             {/* Notificación flotante / banner de retroalimentación */}
             {notificacion && (

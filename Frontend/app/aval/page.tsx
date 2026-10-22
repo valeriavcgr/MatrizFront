@@ -55,7 +55,7 @@ export default function AvalPage() {
     const handleConfirmarRevision = (observaciones: string) => {
         if (!revision) return;
 
-        // [BACKEND INTEGRATION]: POST /api/v1/aval/{id}/decision
+        // [BACKEND INTEGRATION]: POST /aval/{id}/decision
         setSolicitudes(
             solicitudes.map((s) =>
                 s.id === revision.id
@@ -196,7 +196,6 @@ export default function AvalPage() {
         <AppShell
             title="Aval Institucional de Matrices de Formación"
             subtitle="Apruebe o devuelva matrices según los criterios establecidos para otorgar el aval formal de apertura de cupos"
-            initialRole="SUBDIRECTOR"
         >
             <DataTable<SolicitudAval>
                 data={solicitudes}
